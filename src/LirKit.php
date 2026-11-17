@@ -36,12 +36,15 @@ class LirKit
 
     /**
      * The saved sidebar arrangement, to share with every page (e.g. as the Inertia prop `menuOverrides`).
+     * Pass the tenant when the current one is not known yet at that point (null = the resolver's tenant).
      *
      * @return list<array<string, mixed>>
      */
-    public static function menuOverrides(): array
+    public static function menuOverrides(int|string|null $tenant = null): array
     {
-        return MenuSetting::query()->orderBy('order_column')->orderBy('id')
+        $query = $tenant === null ? MenuSetting::query() : MenuSetting::withoutGlobalScopes()->where('tenant_id', (string) $tenant);
+
+        return $query->orderBy('order_column')->orderBy('id')
             ->get(['key', 'title', 'icon', 'is_visible', 'order_column', 'parent_key', 'kind', 'url', 'new_tab'])
             ->map(fn (MenuSetting $m) => $m->toArray())
             ->all();

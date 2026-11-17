@@ -14,6 +14,9 @@ return [
     */
     'ability' => 'lir-kit.manage',
 
+    // Ability khusus untuk editor menu. Null = memakai 'ability' di atas.
+    'menu_ability' => null,
+
     /*
     | Rute. `web` untuk halaman masuk (tamu), `api` untuk layar pengaturan (harus login).
     */

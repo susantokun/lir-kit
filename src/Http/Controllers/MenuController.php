@@ -25,14 +25,14 @@ class MenuController extends Controller
 
     public function show(): JsonResponse
     {
-        Gate::authorize(config('lir-kit.ability'));
+        Gate::authorize(config('lir-kit.menu_ability') ?? config('lir-kit.ability'));
 
         return response()->json(['items' => self::items()]);
     }
 
     public function update(Request $request): JsonResponse
     {
-        Gate::authorize(config('lir-kit.ability'));
+        Gate::authorize(config('lir-kit.menu_ability') ?? config('lir-kit.ability'));
         $keyPattern = 'regex:/^[A-Za-z0-9\/._-]{1,80}$/';
 
         $data = $request->validate([
@@ -130,7 +130,7 @@ class MenuController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
-        Gate::authorize(config('lir-kit.ability'));
+        Gate::authorize(config('lir-kit.menu_ability') ?? config('lir-kit.ability'));
         $before = self::items();
         MenuSetting::query()->delete();
         $this->hooks->audit('reset_menu', $request->user(), $before, []);

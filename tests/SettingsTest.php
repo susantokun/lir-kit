@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Lir\Kit\LirKit;
 use Lir\Kit\Models\MenuSetting;
 use Lir\Kit\Models\Setting;
 use Lir\Kit\Services\LoginMethod;
@@ -108,4 +110,23 @@ it('does not let locked menu entries be hidden', function () {
     config(['lir-kit.menu_locked' => ['/dashboard']]);
 
     $this->actingAs($this->manager())->putJson('/lir-kit/menu', ['items' => [menuRow(['key' => '/dashboard', 'is_visible' => false])]])->assertUnprocessable();
+});
+
+it('lets the menu have its own ability, separate from the other settings', function () {
+    Gate::define('menu.only', fn ($user) => $user->email === 'menu@contoh.co.id');
+    config(['lir-kit.menu_ability' => 'menu.only']);
+    $editor = TestUser::query()->create(['name' => 'Menu', 'email' => 'menu@contoh.co.id']);
+
+    $this->actingAs($editor)->getJson('/lir-kit/menu')->assertOk();
+    $this->actingAs($editor)->getJson('/lir-kit/login-method')->assertForbidden();
+});
+
+it('reads the saved menu of a given tenant even before the current tenant is known', function () {
+    config(['lir-kit.tenant_resolver' => fn () => 5]);
+    $this->actingAs($this->manager())->putJson('/lir-kit/menu', ['items' => [menuRow(['title' => 'Milik 5'])]])->assertOk();
+    config(['lir-kit.tenant_resolver' => null]);
+
+    expect(LirKit::menuOverrides(5))->toHaveCount(1)
+        ->and(LirKit::menuOverrides(5)[0]['title'])->toBe('Milik 5')
+        ->and(LirKit::menuOverrides(6))->toBe([]);
 });

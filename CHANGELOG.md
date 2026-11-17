@@ -3,6 +3,18 @@
 Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis dengan bagian
 **Backend**, **Frontend** (apakah perlu `vendor:publish --tag=lir-kit-js --force`), dan **Upgrade** (langkah khusus).
 
+## [0.2.0] - 2026-11-18
+
+### Backend
+- Baru: config `menu_ability` — ability khusus untuk editor menu (null = memakai `ability`). Berguna bila pengelola menu berbeda dari pengelola login/email.
+- Baru: `LirKit::menuOverrides($tenant)` menerima tenant eksplisit, untuk halaman yang dirender sebelum tenant aktif diketahui.
+
+### Frontend
+- Tidak ada perubahan; tidak perlu publish ulang.
+
+### Upgrade
+- `composer update susantokun/lir-kit`. Tanpa perubahan wajib; perilaku lama tetap.
+
 ## [0.1.1] - 2026-11-18
 
 ### Backend

@@ -66,7 +66,7 @@ class AppLoginHooks implements LoginHooks
 $this->app->bind(\Lir\Kit\Contracts\LoginHooks::class, AppLoginHooks::class);
 ```
 
-Pengaturan lain di `config/lir-kit.php`: `user_model`, `guard`, `login_route`, `two_factor_route`, `redirect_after_login`,
+Pengaturan lain di `config/lir-kit.php`: `menu_ability` (izin terpisah untuk editor menu), `user_model`, `guard`, `login_route`, `two_factor_route`, `redirect_after_login`,
 `tenant_resolver` (mis. `fn () => app(CurrentCompany::class)->id()`), dan `menu_locked`.
 
 ## 4. Pakai login OTP
