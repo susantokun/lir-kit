@@ -27,15 +27,7 @@ PHP 8.3+, Laravel 12/13, Inertia (React), Tailwind + komponen shadcn/ui (`button
 
 ## 1. Pasang
 
-Selama paket belum ada di Packagist, daftarkan repo-nya di `composer.json` aplikasi:
-
-```json
-"repositories": [
-    { "type": "vcs", "url": "git@github.com:susantokun/lir-kit.git" }
-]
-```
-
-(atau `{ "type": "path", "url": "../lir-kit" }` saat dikembangkan berdampingan), lalu:
+Paket ada di Packagist, jadi cukup:
 
 ```bash
 composer require susantokun/lir-kit
