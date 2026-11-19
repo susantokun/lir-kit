@@ -26,6 +26,8 @@ class TestCase extends Orchestra
     {
         $app['config']->set('database.default', 'testing');
         $app['config']->set('mail.default', 'array');
+        $app['config']->set('cache.default', 'array');
+        $app['config']->set('session.driver', 'array');
         $app['config']->set('lir-kit.user_model', TestUser::class);
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
         $app['config']->set('app.name', 'Contoh App');
