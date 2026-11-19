@@ -67,6 +67,10 @@
             "@build",
             "@php vendor/bin/testbench serve --ansi"
         ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "pnpm exec concurrently -c \"#93c5fd,#fdba74\" --names=server,vite --kill-others \"composer serve\" \"pnpm dev\""
+        ],
         "test": "@php vendor/bin/pest"
     }
 }

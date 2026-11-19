@@ -182,12 +182,13 @@ pnpm install
 composer build          # buat database SQLite, migrasi, dan isi akun demo
 ```
 
-Tiap kali bekerja, jalankan di dua terminal:
+Tiap kali bekerja, cukup satu terminal:
 
 ```bash
-composer serve          # backend di http://127.0.0.1:8000
-pnpm dev                # Vite (hot reload React)
+composer run dev        # backend (http://127.0.0.1:8000) dan Vite (hot reload React) sekaligus
 ```
+
+Atau jalankan terpisah di dua terminal: `composer serve` dan `pnpm dev`.
 
 Masuk dengan `demo@lir-kit.test` (kata sandi `password`), atau pilih mode "kode email" di Pengaturan lalu pakai kode yang tampil di halaman.
 Akun `nonaktif@lir-kit.test` dipakai untuk mencoba akun yang tidak boleh masuk. Isi `workbench/` tidak ikut terpasang ke proyek lain (`.gitattributes`).
