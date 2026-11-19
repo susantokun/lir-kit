@@ -34,6 +34,18 @@ const REQUIRES: Record<string, string> = {
   '/settings/menu': 'lir-kit.manage',
 };
 
+/** The part of the kit a page belongs to (config 'lir-kit.features'). A page whose part is off is left out of the menu. */
+const FEATURE: Record<string, string> = {
+  '/akses/pengguna': 'access',
+  '/akses/peran': 'access',
+  '/akses/audit': 'audit',
+  '/settings/login-method': 'otp',
+  '/settings/site': 'site',
+  '/settings/mail': 'mail',
+  '/settings/menu': 'menu',
+  '/settings/license': 'license',
+};
+
 /**
  * Your app's built-in menu: up to three levels (group > entry > sub entry). Give each group and folder a stable `key`;
  * for a page the key is its `href`. Add a page by adding a line, and the sidebar, the search palette and the
@@ -43,10 +55,19 @@ const REQUIRES: Record<string, string> = {
  * `permissions` is what the person may do (the shared prop from LirKit::permissions()). Leave it out to get the whole
  * menu, which is what the menu editor needs. A page whose permission in REQUIRES the person lacks is left out, and so
  * is a folder left empty. Hiding is cosmetic: the routes stay protected by their abilities.
+ *
+ * `features` is the shared prop from LirKit::features(): a page of a part that is switched off is left out, for
+ * everyone (also in the menu editor). Leave it out to keep every page.
  */
-export function buildNav(permissions?: string[]): KitNavGroup[] {
+export function buildNav(
+  permissions?: string[],
+  features?: Record<string, boolean>,
+): KitNavGroup[] {
+  const featureOn = (href: string) =>
+    features === undefined || FEATURE[href] === undefined || features[FEATURE[href]] !== false;
   const allowed = (href: string) =>
-    permissions === undefined || REQUIRES[href] === undefined || permissions.includes(REQUIRES[href]);
+    featureOn(href) &&
+    (permissions === undefined || REQUIRES[href] === undefined || permissions.includes(REQUIRES[href]));
 
   const groups: KitNavGroup[] = [
     {

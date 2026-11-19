@@ -41,6 +41,31 @@ php artisan vendor:publish --tag=lir-kit-js
 
 `migrate` membuat tabel berawalan `lir_`: `lir_login_codes`, `lir_settings`, `lir_menu_settings`, ditambah `lir_roles`, `lir_role_permissions`, `lir_role_user` (peran).
 
+## 1a. Pilih bagian yang dipakai (opsional)
+
+Secara bawaan semua bagian aktif. Bila hanya butuh sebagian, jalankan installer, atau ubah `features` di `config/lir-kit.php`:
+
+```bash
+php artisan lir-kit:install                                    # pilih lewat daftar, bisa diulang untuk mengubah pilihan
+php artisan lir-kit:install --only=otp,audit --starter         # tanpa tanya (untuk skrip dan CI); --all untuk semuanya
+```
+
+| Bagian | Isi | Catatan |
+|---|---|---|
+| `otp` | login kode email dan pengaturan metode masuk | butuh `mail` (ikut dinyalakan otomatis) |
+| `mail` | email pengirim dan template email | saat mati, `MAIL_*` di `.env` tidak ditimpa |
+| `menu` | editor menu sidebar | |
+| `access` | pengguna, peran, hak akses | perintah `lir-kit:grant` |
+| `audit` | log audit tahan-ubah | perintah `lir-kit:audit-verify`; mati = aksi hanya masuk `Log::info` |
+| `site` | nama, logo, favicon | |
+| `license` | license aplikasi | perintah `lir-kit:license-check`; tetap tidak membatasi apa pun sebelum `license.enforce` |
+
+Bagian yang dimatikan **tidak mendaftarkan rute dan perintah artisan** (jawabannya 404, bukan 403). Menunya hilang di starter bila Anda membagikan prop `features`
+(`'features' => fn () => \Lir\Kit\LirKit::features()` di middleware Inertia); tanpa prop itu semua menu tampil. Mode "OTP saja" yang pernah tersimpan diabaikan bila `otp` dimatikan.
+Tabel `lir_*` tetap dibuat oleh `migrate` walau bagiannya mati (kosong dan tidak berbahaya). Installer: menulis `features`, menjalankan `migrate` (kecuali `--no-migrate`),
+menyalin komponen React (kecuali `--no-js`), dan dengan `--starter` menyalin hanya halaman starter milik bagian yang dipilih (berkas yang ada tidak ditimpa tanpa `--force`).
+Proyek yang sudah berjalan tidak perlu apa-apa: tanpa `features`, semuanya tetap aktif seperti sebelumnya.
+
 ## 1b. Pasang starter (UI siap pakai, opsional tetapi disarankan)
 
 Starter memberi proyek baru tampilan lengkap seperti aplikasi jadi: halaman masuk berpanel merek, lupa dan atur ulang kata sandi, tantangan 2FA,

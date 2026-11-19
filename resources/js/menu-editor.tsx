@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { FormDialog } from './form-dialog';
+import { NoticeDialog } from './shell/notice-dialog';
 import {
   arrangeNav,
   overridesFromTree,
@@ -221,6 +222,7 @@ function Row({
   const isFolder = node.children !== undefined;
   const depth = path.length;
   const [armed, setArmed] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
   const canDrop = dnd.dragging !== null && sameList(dnd.dragging, path) && !samePath(dnd.dragging, path);
 
   return (
@@ -331,7 +333,7 @@ function Row({
                 variant="ghost"
                 size="icon"
                 aria-label={t('Hapus')}
-                onClick={() => onRemove(path)}
+                onClick={() => setConfirmRemove(true)}
               >
                 <Trash2Icon />
               </Button>
@@ -352,6 +354,23 @@ function Row({
           </Button>
         </div>
       </div>
+      <NoticeDialog
+        open={confirmRemove}
+        tone="danger"
+        icon={Trash2Icon}
+        title={t('Hapus "{nama}"?', { nama: node.label })}
+        description={
+          isFolder && (node.children?.length ?? 0) > 0
+            ? t('Folder ini dan semua menu di dalamnya akan dihapus dari susunan. Perubahan baru tersimpan saat Anda menekan Simpan.')
+            : t('Menu ini akan dihapus dari susunan. Perubahan baru tersimpan saat Anda menekan Simpan.')
+        }
+        confirmLabel={t('Ya, hapus')}
+        onConfirm={() => {
+          setConfirmRemove(false);
+          onRemove(path);
+        }}
+        onCancel={() => setConfirmRemove(false)}
+      />
       {node.children?.map((child, i) => (
         <Row
           key={child.key}

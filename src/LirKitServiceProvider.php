@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Lir\Kit\Console\GrantRoleCommand;
+use Lir\Kit\Console\InstallCommand;
 use Lir\Kit\Console\LicenseCheckCommand;
 use Lir\Kit\Console\VerifyAuditCommand;
 use Lir\Kit\Http\Middleware\EnsureLicenseWritable;
@@ -43,10 +44,13 @@ class LirKitServiceProvider extends ServiceProvider
         $this->app['router']->aliasMiddleware('lir.license-writable', EnsureLicenseWritable::class);
 
         // The sender email saved in the app takes over from the .env one (also for queue workers, which boot the app too).
-        $this->app->booted(fn () => $this->app->make(MailSettings::class)->apply());
+        // Left alone when the mail part is off, so .env keeps deciding.
+        if (Features::enabled(Features::MAIL)) {
+            $this->app->booted(fn () => $this->app->make(MailSettings::class)->apply());
+        }
 
         // Roles of the kit become Gate abilities: whoever holds a permission (or is superadmin) passes that ability.
-        if (config('lir-kit.register_gate')) {
+        if (config('lir-kit.register_gate') && Features::enabled(Features::ACCESS)) {
             Gate::before(function (?Authenticatable $user, string $ability) {
                 $access = $this->app->make(Access::class);
 
@@ -55,7 +59,12 @@ class LirKitServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([GrantRoleCommand::class, VerifyAuditCommand::class, LicenseCheckCommand::class]);
+            $this->commands(array_values(array_filter([
+                InstallCommand::class,
+                Features::enabled(Features::ACCESS) ? GrantRoleCommand::class : null,
+                Features::enabled(Features::AUDIT) ? VerifyAuditCommand::class : null,
+                Features::enabled(Features::LICENSE) ? LicenseCheckCommand::class : null,
+            ])));
 
             $this->publishes([__DIR__.'/../config/lir-kit.php' => config_path('lir-kit.php')], 'lir-kit-config');
             $this->publishes([__DIR__.'/../resources/views' => resource_path('views/vendor/lir-kit')], 'lir-kit-views');

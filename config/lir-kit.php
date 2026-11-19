@@ -2,6 +2,25 @@
 
 return [
     /*
+    | Bagian kit yang dipakai. Yang dimatikan tidak mendaftarkan rute dan perintah artisan, dan menunya hilang di starter.
+    | Semua aktif secara bawaan. Ubah dengan `php artisan lir-kit:install` atau langsung di sini.
+    |   otp     : login kode email dan metode masuk       mail   : email pengirim dan template (otp butuh mail)
+    |   menu    : editor menu                              access : pengguna, peran, hak akses
+    |   audit   : log audit                                site   : pengaturan situs
+    |   license : license aplikasi (tetap tidak membatasi apa pun sebelum `license.enforce` dinyalakan)
+    | Tabel `lir_*` tetap dibuat oleh migrasi walau bagiannya dimatikan (kosong dan tidak berbahaya).
+    */
+    'features' => [
+        'otp' => true,
+        'mail' => true,
+        'menu' => true,
+        'access' => true,
+        'audit' => true,
+        'site' => true,
+        'license' => true,
+    ],
+
+    /*
     | Model pengguna dan nama guard yang dipakai untuk masuk dengan kode email.
     */
     'user_model' => env('LIR_USER_MODEL', 'App\\Models\\User'),

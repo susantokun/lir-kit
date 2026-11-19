@@ -17,6 +17,14 @@ class TestCase extends Orchestra
 {
     use RefreshDatabase;
 
+    /**
+     * Which kit parts a test file runs with (config 'lir-kit.features'); null = the config's defaults (everything on).
+     * Routes are registered when the app boots, so a file sets this in beforeAll() and clears it in afterAll().
+     *
+     * @var array<string, bool>|null
+     */
+    public static ?array $features = null;
+
     protected function getPackageProviders($app): array
     {
         return [LirKitServiceProvider::class];
@@ -31,6 +39,10 @@ class TestCase extends Orchestra
         $app['config']->set('lir-kit.user_model', TestUser::class);
         $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('k', 32)));
         $app['config']->set('app.name', 'Contoh App');
+
+        if (static::$features !== null) {
+            $app['config']->set('lir-kit.features', static::$features);
+        }
     }
 
     protected function defineDatabaseMigrations(): void

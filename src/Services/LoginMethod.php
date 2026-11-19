@@ -3,6 +3,7 @@
 namespace Lir\Kit\Services;
 
 use Illuminate\Support\Facades\Cache;
+use Lir\Kit\Features;
 use Lir\Kit\Models\Setting;
 
 /**
@@ -32,7 +33,8 @@ class LoginMethod
         $merged = array_merge(array_intersect_key((array) config('lir-kit.login'), array_flip(self::FIELDS)), (array) $stored);
 
         return [
-            'mode' => in_array($merged['mode'], self::MODES, true) ? $merged['mode'] : self::PASSWORD,
+            // With the emailed-code part switched off, only the password counts whatever was saved before.
+            'mode' => Features::enabled(Features::OTP) && in_array($merged['mode'], self::MODES, true) ? $merged['mode'] : self::PASSWORD,
             'length' => (int) $merged['length'],
             'ttl_minutes' => (int) $merged['ttl_minutes'],
             'max_attempts' => (int) $merged['max_attempts'],

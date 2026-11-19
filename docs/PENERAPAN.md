@@ -18,6 +18,24 @@ Kit punya dua lapis:
 
 ---
 
+## Cara tercepat: installer
+
+```powershell
+composer require susantokun/lir-kit
+php artisan lir-kit:install
+```
+
+Installer menampilkan daftar bagian (login OTP, email, menu, pengguna dan peran, audit, situs, license), menulis pilihan ke `config/lir-kit.php`,
+menjalankan `migrate`, menyalin komponen React, dan (bila Anda setuju) hanya halaman starter milik bagian yang dipilih. Di akhir ia mencetak langkah manual
+yang relevan (Gate, `share()`, dan lainnya). Aman diulang untuk mengubah pilihan.
+
+Tanpa pertanyaan (skrip, CI): `php artisan lir-kit:install --only=otp,audit --starter` atau `--all`. Opsi lain: `--no-migrate`, `--no-js`, `--force`.
+Bagian yang dimatikan tidak mendaftarkan rute dan perintahnya (404). `otp` otomatis membawa `mail`.
+
+Langkah manual di bawah tetap berlaku; installer hanya menggantikan perintah publish dan pemilihan bagian.
+
+---
+
 ## A. Proyek baru
 
 ### 1. Pasang paket dan starter
@@ -29,6 +47,8 @@ php artisan vendor:publish --tag=lir-kit-config
 php artisan vendor:publish --tag=lir-kit-js
 php artisan vendor:publish --tag=lir-kit-starter
 ```
+
+(Atau `php artisan lir-kit:install --starter` untuk memilih bagian dan hanya menyalin halaman yang perlu.)
 
 ### 2. Fortify: arahkan view ke halaman starter
 
@@ -68,6 +88,7 @@ class User extends Authenticatable
 'auth' => ['user' => $request->user() ? [/* ..., */ 'id' => $request->user()->id] : null],
 'menuOverrides' => fn () => $request->user() ? \Lir\Kit\LirKit::menuOverrides() : [],
 'permissions'   => fn () => \Lir\Kit\LirKit::permissions($request->user()),
+'features'      => fn () => \Lir\Kit\LirKit::features(),   // menu starter mengikuti bagian yang aktif
 'site'          => fn () => \Lir\Kit\LirKit::site(),
 'license'       => fn () => \Lir\Kit\LirKit::license(),
 'twoFactor'     => fn () => ['enabled' => /* ... */ false, 'pending' => /* ... */ false],
@@ -132,6 +153,9 @@ Definisikan Gate `lir-kit.manage`. Bila sudah punya sistem peran sendiri, petaka
 Penting untuk proyek lama: akun nonaktif, SSO, sesi tunggal, 2FA, riwayat login, audit. Buat kelas yang mengimplementasikan `Lir\Kit\Contracts\LoginHooks` dan ikat di `AppServiceProvider::register()`. Tanpa ini kit memakai `DefaultLoginHooks`.
 
 ### 5. Aktifkan fitur bertahap (dari yang paling aman)
+
+Tanpa `features` di config, semua bagian aktif seperti biasa. Untuk proyek yang hanya butuh sebagian, jalankan `php artisan lir-kit:install --only=...` (lihat atas)
+dan bagian lain tidak mendaftarkan rute apa pun.
 
 | Urutan | Fitur | Yang dikerjakan | Catatan |
 |---|---|---|---|

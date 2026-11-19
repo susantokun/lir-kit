@@ -18,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { ApiError, api, notify, t } from './adapters';
+import { NoticeDialog } from './shell/notice-dialog';
 
 type Template = {
   custom: { subject: string; body: string };
@@ -34,6 +35,7 @@ export function LoginCodeEmailCard() {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const apply = (d: Template) => {
     setData(d);
     setSubject(d.custom.subject || d.defaults.subject);
@@ -64,6 +66,7 @@ export function LoginCodeEmailCard() {
   };
 
   const reset = async () => {
+    setConfirmReset(false);
     setBusy(true);
     try {
       apply(await api<Template>('/login-code-email', { method: 'DELETE' }));
@@ -130,7 +133,7 @@ export function LoginCodeEmailCard() {
               </Button>
               <Button
                 variant="outline"
-                onClick={reset}
+                onClick={() => setConfirmReset(true)}
                 disabled={busy || (!data.custom.subject && !data.custom.body)}
               >
                 {t('Kembalikan ke bawaan')}
@@ -139,6 +142,15 @@ export function LoginCodeEmailCard() {
           </FieldGroup>
         )}
       </CardContent>
+      <NoticeDialog
+        open={confirmReset}
+        tone="warning"
+        title={t('Kembalikan template ke bawaan?')}
+        description={t('Subjek dan isi email yang sudah Anda ubah akan diganti dengan teks bawaan.')}
+        confirmLabel={t('Ya, kembalikan')}
+        onConfirm={reset}
+        onCancel={() => setConfirmReset(false)}
+      />
     </Card>
   );
 }

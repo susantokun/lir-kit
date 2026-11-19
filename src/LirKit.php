@@ -39,6 +39,17 @@ class LirKit
     }
 
     /**
+     * Which parts of the kit are switched on (config 'lir-kit.features'), to share with every page (e.g. as the Inertia
+     * prop `features`) so the starter's menu leaves out what is off. Every part is on unless the application says otherwise.
+     *
+     * @return array<string, bool>
+     */
+    public static function features(): array
+    {
+        return Features::all();
+    }
+
+    /**
      * What this person may do, to share with every page (e.g. as the Inertia prop `permissions`) so the menu can hide
      * what they cannot open. Empty for a guest; every permission for a superadmin.
      *
@@ -58,6 +69,10 @@ class LirKit
      */
     public static function site(): array
     {
+        if (! Features::enabled(Features::SITE)) {
+            return ['name' => (string) config('app.name'), 'tagline' => null, 'contact_email' => null, 'logo' => null, 'favicon' => null];
+        }
+
         try {
             return app(SiteSettings::class)->present();
         } catch (\Throwable) {
@@ -74,6 +89,10 @@ class LirKit
      */
     public static function license(): array
     {
+        if (! Features::enabled(Features::LICENSE)) {
+            return ['status' => 'unconfigured', 'read_only' => false, 'message' => null, 'expires_at' => null, 'days_left' => null];
+        }
+
         try {
             return app(LicenseState::class)->shared();
         } catch (\Throwable) {
@@ -89,6 +108,10 @@ class LirKit
      */
     public static function menuOverrides(int|string|null $tenant = null): array
     {
+        if (! Features::enabled(Features::MENU)) {
+            return [];
+        }
+
         $query = $tenant === null ? MenuSetting::query() : MenuSetting::withoutGlobalScopes()->where('tenant_id', (string) $tenant);
 
         return $query->orderBy('order_column')->orderBy('id')

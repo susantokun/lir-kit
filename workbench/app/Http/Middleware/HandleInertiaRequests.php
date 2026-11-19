@@ -27,6 +27,8 @@ class HandleInertiaRequests extends Middleware
             'license' => fn () => LirKit::license(),
             // What this person may do (their roles' permissions), so the menu can leave out what they cannot open.
             'permissions' => fn () => LirKit::permissions($request->user()),
+            // Which parts of the kit are on (config 'lir-kit.features'); the menu leaves out the pages of the ones that are off.
+            'features' => fn () => LirKit::features(),
             'status' => fn () => $request->session()->get('status'),
             // The saved sidebar arrangement, shared with every page (see README, "Pakai editor menu").
             'twoFactor' => fn () => ['enabled' => (bool) $request->session()->get('demo_2fa') && $request->session()->get('demo_2fa_confirmed'), 'pending' => (bool) $request->session()->get('demo_2fa') && ! $request->session()->get('demo_2fa_confirmed')],

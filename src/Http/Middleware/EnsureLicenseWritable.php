@@ -4,6 +4,7 @@ namespace Lir\Kit\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Lir\Kit\Features;
 use Lir\Kit\Support\Licensing\LicenseState;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -20,7 +21,7 @@ class EnsureLicenseWritable
     {
         $exempt = ['lir-kit.license.*', 'lir.otp.*', ...(array) config('lir-kit.license.exempt_routes', [])];
 
-        if ($request->isMethodSafe() || ! $this->license->isReadOnly() || $request->routeIs(...$exempt)) {
+        if (! Features::enabled(Features::LICENSE) || $request->isMethodSafe() || ! $this->license->isReadOnly() || $request->routeIs(...$exempt)) {
             return $next($request);
         }
 

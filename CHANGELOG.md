@@ -6,6 +6,7 @@ Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis d
 ## [Belum dirilis] (rencana 0.3.0): starter kit, Fase 1 sampai 3
 
 ### Backend
+- Baru: **pilih bagian yang dipakai.** Config baru `features` (`otp`, `mail`, `menu`, `access`, `audit`, `site`, `license`), **semua aktif secara bawaan** sehingga proyek yang sudah berjalan tidak berubah. Bagian yang dimatikan tidak mendaftarkan rute dan perintah artisan (404), `otp` butuh `mail` (ikut dinyalakan), `LoginMethod` mengabaikan mode OTP tersimpan bila `otp` mati, `MailSettings` tidak menimpa `MAIL_*` bila `mail` mati, `DefaultLoginHooks::audit()` hanya menulis `Log::info` bila `audit` mati, middleware `lir.license-writable` meneruskan semua bila `license` mati. Kelas baru `Lir\Kit\Features`, `LirKit::features()` (bagikan sebagai prop `features`), dan perintah `lir-kit:install` (interaktif atau `--only=otp,audit --starter --all --no-migrate --no-js --force`). Tabel `lir_*` tetap dibuat oleh migrasi. `LoginHooks` tidak berubah.
 - Baru (Fase 3): pengguna, peran, dan hak akses. Migrasi baru `2026_02_01_000001` membuat `lir_roles`, `lir_role_permissions`, `lir_role_user` (migrasi lama tidak diubah). Rute JSON `/lir-kit/users` (daftar, tambah+undang, ubah, hapus, undang ulang) dan `/lir-kit/roles`, dijaga config baru `users_ability` dan `roles_ability` (null = memakai `ability`). Config baru `permissions`, `register_gate` (Gate::before dari peran), dan tiga nama tabel (semua punya default).
 - Baru: kontrak `UserDirectory` (bawaan `EloquentUserDirectory`), layanan `Access`, trait `HasLirRoles`, `LirKit::permissions($user)`, notifikasi undangan, perintah `lir-kit:grant {email} {role=superadmin}`. `LoginHooks` tidak berubah.
 - Pengaman: Superadmin terakhir dan akun yang sedang dipakai tidak bisa dihapus atau dinonaktifkan; peran bawaan tidak bisa diubah; peran dipisah per tenant.
@@ -16,6 +17,8 @@ Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis d
 - Berubah: `GET /lir-kit/users` kini juga mengirim `stats` (`total`, `active`, `inactive`); kunci lama tidak berubah.
 
 ### Frontend
+- Berubah (perlu `vendor:publish --tag=lir-kit-js --force`, lalu pulihkan `adapters.ts`): **konfirmasi sebelum aksi yang tidak biasa.** `ImagePicker` (foto profil, logo, favicon) kini bertanya sebelum menghapus gambar tersimpan; kartu Template email kode bertanya sebelum "Kembalikan ke bawaan"; editor menu bertanya sebelum menghapus entri buatan sendiri (folder berisi dikatakan jelas). Yang sudah bertanya tidak berubah: hapus dan nonaktifkan pengguna, hapus peran, ekspor dan verifikasi log audit, kembalikan menu ke bawaan, keluar. Starter `pages/settings/security.tsx` bertanya sebelum menonaktifkan 2FA (milik proyek: salin sendiri bila halaman Anda sudah diubah).
+- Berubah di starter (milik proyek, tidak tertimpa): `config/nav.ts` punya parameter kedua `buildNav(permissions?, features?)` dan halaman tiap bagian hilang dari menu bila `features[bagian]` bernilai false; `layouts/app-layout.tsx` dan `pages/settings/menu.tsx` meneruskan prop `features`. Tanpa prop itu semua menu tampil seperti sebelumnya.
 - Baru di paket (disalin dengan `--tag=lir-kit-js`): `layouts/auth-split-layout.tsx` (layout masuk berpanel merek), `layouts/app-shell.tsx` (sidebar tiga level yang bisa diciutkan, bilah atas dengan breadcrumb, pencarian Ctrl K, tema, menu akun, tampilan ponsel), `layouts/page-header.tsx`, `shell/*` (sidebar, pencarian, menu akun, tema, logo, dialog konfirmasi), `hooks/use-appearance.ts`, `nav.ts` (breadcrumb dan daftar halaman dari menu).
 - Baru di starter (milik proyek): halaman `auth/{login,forgot-password,reset-password,two-factor-challenge,verify-email}`; memakai URL bawaan Fortify.
 - Baru di paket (Fase 2): `layouts/settings-layout.tsx` (menu samping pengaturan dari folder menu), `layouts/form-card.tsx` (`FormCard`, `FormGrid`), `shell/appearance-card.tsx` (pilihan tema).
@@ -30,12 +33,14 @@ Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis d
 - Syarat shadcn bertambah: `avatar`, `breadcrumb`, `collapsible`, `dropdown-menu`, `input-group`, `kbd`, `scroll-area`, `sheet`, `sidebar`, `tooltip`.
 
 ### Tooling
+- Tes baru: `FeaturesTest`, `FeaturesOffTest`, `FeaturesPartialTest` (semua aktif, semua mati, dan sebagian; `TestCase::$features` mengatur config sebelum aplikasi menyala).
 - Berubah di starter: `css/lir-kit-starter.css` punya aturan cetak (tanpa sidebar dan bilah atas, tabel tidak terpotong atau bergulir).
 - Playground: Dashboard berwarna (kartu ringkasan, grafik batang, donat, antrean per tahap, aktivitas) dan Laporan (periode tanggal, saringan, tabel, ekspor CSV dengan konfirmasi, cetak semua baris), keduanya memakai data buatan yang tetap untuk tanggal yang sama (`workbench/resources/js/lib/dummy.ts`); hanya untuk playground, tidak ikut terpasang.
 - Playground: nama dan judul tab kini `LIR-KIT`, ada favicon, rute foto profil demo (`/profile/avatar`, kolom `users.avatar_path` lewat migrasi playground), dan `site` dibagikan ke semua halaman. Tes baru: `AuditLogTest`, `SiteSettingsTest`, dan `stats` di `AccessTest`.
 - Playground memakai starter apa adanya (alias `@/lir-kit`, `@/config`, `@/layouts`); rute demo meniru URL Fortify (Password broker untuk lupa dan atur ulang kata sandi). Halaman pengaturan dan editor menu kini dibungkus `AppLayout`.
 
 ### Upgrade
+- Tidak ada langkah wajib untuk fitur pilih-bagian: tanpa `features` semuanya tetap aktif. Untuk mematikan sebagian: `php artisan lir-kit:install` (atau ubah `features` di config, lalu `config:clear` bila config di-cache) dan bagikan `'features' => fn () => \Lir\Kit\LirKit::features()` agar menu starter mengikuti.
 - `php artisan migrate` (tabel peran dan tabel log audit). Bagikan `site` ke halaman (`'site' => fn () => LirKit::site()`) bila memakai Pengaturan Situs, jadwalkan `Schedule::command('lir-kit:audit-verify')->dailyAt('03:00')` bila ingin pemeriksaan harian, dan lihat README 6d bila memakai License (config `license` mati secara bawaan). Tidak ada langkah wajib lain. Untuk memakai UI baru: `vendor:publish --tag=lir-kit-js --force` (lalu pulihkan `adapters.ts`) dan `vendor:publish --tag=lir-kit-starter`.
 
 ## [0.2.2] - 2026-11-19

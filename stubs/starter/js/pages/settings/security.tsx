@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { t } from '@/lir-kit/adapters';
 import { FormCard, FormGrid } from '@/lir-kit/layouts/form-card';
+import { NoticeDialog } from '@/lir-kit/shell/notice-dialog';
 import SettingsPage from '@/layouts/settings-page';
 
 /** Shared by your app (e.g. in HandleInertiaRequests): is two-step verification on, or set up but not yet confirmed? */
@@ -39,6 +40,7 @@ function TwoFactorCard({ twoFactor }: { twoFactor: TwoFactor }) {
   const [codes, setCodes] = useState<string[]>([]);
   const form = useForm({ code: '' });
   const [busy, setBusy] = useState(false);
+  const [confirmOff, setConfirmOff] = useState(false);
 
   useEffect(() => {
     if (twoFactor.pending) {
@@ -143,7 +145,11 @@ function TwoFactorCard({ twoFactor }: { twoFactor: TwoFactor }) {
           <Button
             variant="outline"
             disabled={busy}
-            onClick={() => call('delete', '/user/two-factor-authentication')}
+            onClick={() =>
+              twoFactor.enabled
+                ? setConfirmOff(true)
+                : call('delete', '/user/two-factor-authentication')
+            }
           >
             {busy && <Spinner data-icon="inline-start" />}
             {twoFactor.pending ? t('Batalkan') : t('Nonaktifkan')}
@@ -158,6 +164,19 @@ function TwoFactorCard({ twoFactor }: { twoFactor: TwoFactor }) {
           </Button>
         )}
       </CardFooter>
+      <NoticeDialog
+        open={confirmOff}
+        tone="danger"
+        title={t('Nonaktifkan verifikasi dua langkah?')}
+        description={t('Akun Anda tidak lagi meminta kode dari aplikasi autentikator saat masuk, dan kode pemulihan dihapus.')}
+        confirmLabel={t('Ya, nonaktifkan')}
+        busy={busy}
+        onConfirm={() => {
+          setConfirmOff(false);
+          call('delete', '/user/two-factor-authentication');
+        }}
+        onCancel={() => setConfirmOff(false)}
+      />
     </Card>
   );
 }

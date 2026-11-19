@@ -5,6 +5,7 @@ namespace Lir\Kit\Support;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Log;
 use Lir\Kit\Contracts\LoginHooks;
+use Lir\Kit\Features;
 use Lir\Kit\Services\AuditTrail;
 use Throwable;
 
@@ -36,6 +37,12 @@ class DefaultLoginHooks implements LoginHooks
 
     public function audit(string $action, ?Authenticatable $actor, mixed $before = null, mixed $after = null): void
     {
+        if (! Features::enabled(Features::AUDIT)) {
+            Log::info("lir-kit: {$action}", ['actor' => $actor?->getAuthIdentifier(), 'before' => $before, 'after' => $after]);
+
+            return;
+        }
+
         try {
             app(AuditTrail::class)->log($action, $actor, $before, $after);
         } catch (Throwable $e) {

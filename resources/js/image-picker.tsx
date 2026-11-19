@@ -2,6 +2,7 @@ import { ImageUpIcon, Trash2Icon } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { t } from './adapters';
+import { NoticeDialog } from './shell/notice-dialog';
 
 /**
  * Pick-and-preview control for a picture (profile photo, logo, favicon): a preview, a button to choose a file,
@@ -46,6 +47,13 @@ export function ImagePicker({
   }, [file]);
 
   const shown = preview ?? current ?? null;
+  const [confirming, setConfirming] = useState(false);
+
+  const remove = () => {
+    setConfirming(false);
+    onFile(null);
+    onRemove?.();
+  };
 
   return (
     <div className="flex items-center gap-4">
@@ -76,10 +84,7 @@ export function ImagePicker({
               variant="destructive"
               size="sm"
               disabled={busy}
-              onClick={() => {
-                onFile(null);
-                onRemove();
-              }}
+              onClick={() => (current ? setConfirming(true) : remove())}
             >
               <Trash2Icon />
               {t('Hapus')}
@@ -99,6 +104,16 @@ export function ImagePicker({
           onFile(e.target.files?.[0] ?? null);
           e.target.value = '';
         }}
+      />
+      <NoticeDialog
+        open={confirming}
+        tone="danger"
+        icon={Trash2Icon}
+        title={t('Hapus gambar?')}
+        description={t('Gambar yang tersimpan akan dihapus. Tindakan ini tidak bisa dibatalkan.')}
+        confirmLabel={t('Ya, hapus')}
+        onConfirm={remove}
+        onCancel={() => setConfirming(false)}
       />
     </div>
   );

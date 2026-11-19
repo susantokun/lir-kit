@@ -18,6 +18,8 @@ type Shared = {
   menuOverrides?: MenuOverride[];
   /** From LirKit::permissions(); when the app does not share it, the whole menu shows. */
   permissions?: string[];
+  /** From LirKit::features(): the parts of the kit that are on; a page of a part that is off leaves the menu. */
+  features?: Record<string, boolean>;
 };
 
 /**
@@ -25,11 +27,11 @@ type Shared = {
  * saved in the menu editor applied.
  */
 export function useNavGroups(): KitNavGroup[] {
-  const { menuOverrides, permissions } = usePage<Shared>().props;
+  const { menuOverrides, permissions, features } = usePage<Shared>().props;
 
   return useMemo(
-    () => applyMenu(buildNav(permissions), menuOverrides ?? []),
-    [menuOverrides, permissions],
+    () => applyMenu(buildNav(permissions, features), menuOverrides ?? []),
+    [menuOverrides, permissions, features],
   );
 }
 

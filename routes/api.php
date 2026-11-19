@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Lir\Kit\Features;
 use Lir\Kit\Http\Controllers\AuditLogController;
 use Lir\Kit\Http\Controllers\LicenseController;
 use Lir\Kit\Http\Controllers\LoginSettingsController;
@@ -12,43 +13,58 @@ use Lir\Kit\Http\Controllers\UsersController;
 
 /*
 | Layar pengaturan. Semua rute butuh ability `lir-kit.manage` (config/lir-kit.php).
+| Bagian yang dimatikan di config 'lir-kit.features' tidak mendaftarkan rutenya (404).
 */
 Route::middleware(config('lir-kit.routes.api_middleware'))->prefix(config('lir-kit.routes.api_prefix'))->name('lir-kit.')->group(function () {
-    Route::get('login-method', [LoginSettingsController::class, 'showMethod'])->name('login-method.show');
-    Route::put('login-method', [LoginSettingsController::class, 'updateMethod'])->name('login-method.update');
-    Route::get('login-code-email', [LoginSettingsController::class, 'showEmail'])->name('login-code-email.show');
-    Route::put('login-code-email', [LoginSettingsController::class, 'updateEmail'])->name('login-code-email.update');
-    Route::delete('login-code-email', [LoginSettingsController::class, 'resetEmail'])->name('login-code-email.destroy');
+    if (Features::enabled(Features::OTP)) {
+        Route::get('login-method', [LoginSettingsController::class, 'showMethod'])->name('login-method.show');
+        Route::put('login-method', [LoginSettingsController::class, 'updateMethod'])->name('login-method.update');
+        Route::get('login-code-email', [LoginSettingsController::class, 'showEmail'])->name('login-code-email.show');
+        Route::put('login-code-email', [LoginSettingsController::class, 'updateEmail'])->name('login-code-email.update');
+        Route::delete('login-code-email', [LoginSettingsController::class, 'resetEmail'])->name('login-code-email.destroy');
+    }
 
-    Route::get('mail-settings', [MailSettingsController::class, 'show'])->name('mail-settings.show');
-    Route::put('mail-settings', [MailSettingsController::class, 'update'])->name('mail-settings.update');
-    Route::post('mail-settings/test', [MailSettingsController::class, 'test'])->middleware('throttle:10,1')->name('mail-settings.test');
+    if (Features::enabled(Features::MAIL)) {
+        Route::get('mail-settings', [MailSettingsController::class, 'show'])->name('mail-settings.show');
+        Route::put('mail-settings', [MailSettingsController::class, 'update'])->name('mail-settings.update');
+        Route::post('mail-settings/test', [MailSettingsController::class, 'test'])->middleware('throttle:10,1')->name('mail-settings.test');
+    }
 
-    Route::get('menu', [MenuController::class, 'show'])->name('menu.show');
-    Route::put('menu', [MenuController::class, 'update'])->name('menu.update');
-    Route::delete('menu', [MenuController::class, 'destroy'])->name('menu.destroy');
+    if (Features::enabled(Features::MENU)) {
+        Route::get('menu', [MenuController::class, 'show'])->name('menu.show');
+        Route::put('menu', [MenuController::class, 'update'])->name('menu.update');
+        Route::delete('menu', [MenuController::class, 'destroy'])->name('menu.destroy');
+    }
 
-    Route::get('users', [UsersController::class, 'index'])->name('users.index');
-    Route::post('users', [UsersController::class, 'store'])->middleware('throttle:30,1')->name('users.store');
-    Route::put('users/{user}', [UsersController::class, 'update'])->name('users.update');
-    Route::delete('users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
-    Route::post('users/{user}/invite', [UsersController::class, 'invite'])->middleware('throttle:10,1')->name('users.invite');
+    if (Features::enabled(Features::ACCESS)) {
+        Route::get('users', [UsersController::class, 'index'])->name('users.index');
+        Route::post('users', [UsersController::class, 'store'])->middleware('throttle:30,1')->name('users.store');
+        Route::put('users/{user}', [UsersController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
+        Route::post('users/{user}/invite', [UsersController::class, 'invite'])->middleware('throttle:10,1')->name('users.invite');
 
-    Route::get('site', [SiteSettingsController::class, 'show'])->name('site.show');
-    Route::post('site', [SiteSettingsController::class, 'update'])->middleware('throttle:30,1')->name('site.update');
+        Route::get('roles', [RolesController::class, 'index'])->name('roles.index');
+        Route::post('roles', [RolesController::class, 'store'])->name('roles.store');
+        Route::put('roles/{role}', [RolesController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{role}', [RolesController::class, 'destroy'])->name('roles.destroy');
+    }
 
-    Route::get('license', [LicenseController::class, 'show'])->name('license.show');
-    Route::post('license/activate', [LicenseController::class, 'activate'])->middleware('throttle:10,1')->name('license.activate');
-    Route::post('license/upload', [LicenseController::class, 'upload'])->middleware('throttle:10,1')->name('license.upload');
-    Route::post('license/check', [LicenseController::class, 'check'])->middleware('throttle:10,1')->name('license.check');
+    if (Features::enabled(Features::SITE)) {
+        Route::get('site', [SiteSettingsController::class, 'show'])->name('site.show');
+        Route::post('site', [SiteSettingsController::class, 'update'])->middleware('throttle:30,1')->name('site.update');
+    }
 
-    Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
-    Route::get('audit-log/checkpoints', [AuditLogController::class, 'checkpoints'])->name('audit-log.checkpoints');
-    Route::get('audit-log/export', [AuditLogController::class, 'export'])->middleware('throttle:10,1')->name('audit-log.export');
-    Route::post('audit-log/verify', [AuditLogController::class, 'verify'])->middleware('throttle:10,1')->name('audit-log.verify');
+    if (Features::enabled(Features::LICENSE)) {
+        Route::get('license', [LicenseController::class, 'show'])->name('license.show');
+        Route::post('license/activate', [LicenseController::class, 'activate'])->middleware('throttle:10,1')->name('license.activate');
+        Route::post('license/upload', [LicenseController::class, 'upload'])->middleware('throttle:10,1')->name('license.upload');
+        Route::post('license/check', [LicenseController::class, 'check'])->middleware('throttle:10,1')->name('license.check');
+    }
 
-    Route::get('roles', [RolesController::class, 'index'])->name('roles.index');
-    Route::post('roles', [RolesController::class, 'store'])->name('roles.store');
-    Route::put('roles/{role}', [RolesController::class, 'update'])->name('roles.update');
-    Route::delete('roles/{role}', [RolesController::class, 'destroy'])->name('roles.destroy');
+    if (Features::enabled(Features::AUDIT)) {
+        Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+        Route::get('audit-log/checkpoints', [AuditLogController::class, 'checkpoints'])->name('audit-log.checkpoints');
+        Route::get('audit-log/export', [AuditLogController::class, 'export'])->middleware('throttle:10,1')->name('audit-log.export');
+        Route::post('audit-log/verify', [AuditLogController::class, 'verify'])->middleware('throttle:10,1')->name('audit-log.verify');
+    }
 });
