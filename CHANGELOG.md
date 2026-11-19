@@ -3,6 +3,17 @@
 Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis dengan bagian
 **Backend**, **Frontend** (apakah perlu `vendor:publish --tag=lir-kit-js --force`), dan **Upgrade** (langkah khusus).
 
+## [0.2.1] - 2026-11-19
+
+### Backend
+- Tidak ada perubahan.
+
+### Frontend
+- `menu-editor.tsx`: bar Simpan menu diberi jarak kiri kanan. Perlu `vendor:publish --tag=lir-kit-js --force` (lalu pulihkan `adapters.ts` Anda), atau tambahkan kelas `mx-3 sm:mx-6` pada bar secara manual.
+
+### Upgrade
+- `composer update susantokun/lir-kit`.
+
 ## [0.2.0] - 2026-11-18
 
 ### Backend

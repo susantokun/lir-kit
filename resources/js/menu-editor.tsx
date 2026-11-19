@@ -637,7 +637,7 @@ export function MenuEditor({
         )}
 
         {overrides !== null && (
-          <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-2 rounded-xl border bg-background/95 p-3 shadow-sm backdrop-blur">
+          <div className="sticky bottom-4 z-10 mx-3 flex flex-wrap items-center gap-2 rounded-xl sm:mx-6 border bg-background/95 p-3 shadow-sm backdrop-blur">
             <Button onClick={save} disabled={saving || !dirty}>
               {saving && <Spinner data-icon="inline-start" />}
               {t('Simpan menu')}
