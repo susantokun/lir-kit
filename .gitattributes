@@ -10,3 +10,5 @@
 /.gitignore export-ignore
 /.claude export-ignore
 /CLAUDE.md export-ignore
+/components.json export-ignore
+/.mcp.json export-ignore

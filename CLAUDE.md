@@ -32,6 +32,9 @@ Baca `README.md` (pasang, pakai, update) sebelum mengubah apa pun.
   Jangan mengimpor apa pun dari `@/lib/api`, `@/lib/i18n`, `@/lib/notify`, atau komponen milik aplikasi: lewat `./adapters`. (Bug v0.2.2 berasal dari ini.)
 - Gaya komponen mengikuti **shadcn/ui** (Base UI) yang dipakai playground: `Field`, `FieldLabel`, `Card`, `Button`, dan seterusnya. Pakai skill `shadcn` untuk menambah atau memeriksa komponen,
   dan `tailwindcss-development` untuk kelas Tailwind v4. Jangan menulis gaya sendiri bila komponen shadcn tersedia.
+- shadcn: `components.json` di root menunjuk ke playground, dan `.mcp.json` memasang MCP `shadcn`. Menambah komponen: `npx shadcn@latest add <nama>`
+  (terpasang ke `workbench/resources/js/components/ui`). Skill `shadcn` ada di `.claude/skills/shadcn`.
+  Komponen yang dipakai kit harus ada di daftar syarat README ("Syarat"), karena proyek pemakai harus memilikinya.
 - Semua teks UI **Bahasa Indonesia** lewat `t()`; teks sisi server lewat `__()`. Tambahkan terjemahan Inggris di `lang/en.json` (server) dan `resources/js/lang.en.json` (klien).
 - Perubahan di komponen React berarti proyek harus `vendor:publish --tag=lir-kit-js --force` (lalu memulihkan `adapters.ts`): **tulis itu di CHANGELOG** pada bagian Frontend.
 

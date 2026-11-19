@@ -12,11 +12,20 @@
         "strict": true,
         "skipLibCheck": true,
         "jsx": "react-jsx",
-        "types": ["vite/client"],
+        "types": [
+            "vite/client"
+        ],
         "paths": {
-            "@lir-kit/*": ["./resources/js/*"],
-            "@/*": ["./workbench/resources/js/*"]
+            "@/*": [
+                "./workbench/resources/js/*"
+            ],
+            "@lir-kit/*": [
+                "./resources/js/*"
+            ]
         }
     },
-    "include": ["resources/js/**/*", "workbench/resources/js/**/*"]
+    "include": [
+        "resources/js/**/*",
+        "workbench/resources/js/**/*"
+    ]
 }
