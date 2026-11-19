@@ -3,7 +3,7 @@
 Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis dengan bagian
 **Backend**, **Frontend** (apakah perlu `vendor:publish --tag=lir-kit-js --force`), dan **Upgrade** (langkah khusus).
 
-## [Belum dirilis] (rencana 0.3.0): starter kit, Fase 1
+## [Belum dirilis] (rencana 0.3.0): starter kit, Fase 1 dan 2
 
 ### Backend
 - Baru: tag publish `lir-kit-starter` (halaman auth, `layouts/app-layout.tsx`, `config/brand.ts`, `config/nav.ts`, `css/lir-kit-starter.css` dari `stubs/starter`). Tidak ada tabel, migrasi, atau config baru.
@@ -11,6 +11,8 @@ Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis d
 ### Frontend
 - Baru di paket (disalin dengan `--tag=lir-kit-js`): `layouts/auth-split-layout.tsx` (layout masuk berpanel merek), `layouts/app-shell.tsx` (sidebar tiga level yang bisa diciutkan, bilah atas dengan breadcrumb, pencarian Ctrl K, tema, menu akun, tampilan ponsel), `layouts/page-header.tsx`, `shell/*` (sidebar, pencarian, menu akun, tema, logo, dialog konfirmasi), `hooks/use-appearance.ts`, `nav.ts` (breadcrumb dan daftar halaman dari menu).
 - Baru di starter (milik proyek): halaman `auth/{login,forgot-password,reset-password,two-factor-challenge,verify-email}`; memakai URL bawaan Fortify.
+- Baru di paket (Fase 2): `layouts/settings-layout.tsx` (menu samping pengaturan dari folder menu), `layouts/form-card.tsx` (`FormCard`, `FormGrid`), `shell/appearance-card.tsx` (pilihan tema).
+- Baru di starter (Fase 2): `pages/settings/{login-method,mail,menu,profile,security,appearance}.tsx`, `layouts/settings-page.tsx`; menu bawaan kini punya folder Pengaturan dan Akun saya. Profil, keamanan, dan 2FA memakai endpoint akun Fortify dan prop `twoFactor`.
 - Komponen lama tidak berubah; `adapters.ts` tidak mendapat ekspor baru. Terjemahan Inggris baru ada di `lang.en.json`.
 - Syarat shadcn bertambah: `avatar`, `breadcrumb`, `collapsible`, `dropdown-menu`, `input-group`, `kbd`, `scroll-area`, `sheet`, `sidebar`, `tooltip`.
 

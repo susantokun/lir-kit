@@ -109,7 +109,42 @@ Route::middleware(['web', HandleInertiaRequests::class])->group(function () {
         Route::get('laporan', fn () => Inertia::render('coming-soon', ['title' => 'Laporan']));
         Route::get('akses/pengguna', fn () => Inertia::render('coming-soon', ['title' => 'Pengguna']));
         Route::get('akses/peran', fn () => Inertia::render('coming-soon', ['title' => 'Peran']));
-        Route::get('settings', fn () => Inertia::render('settings'))->name('playground.settings');
-        Route::get('settings/menu', fn () => Inertia::render('menu'))->name('playground.menu');
+        Route::redirect('settings', '/settings/login-method');
+        foreach (['login-method', 'mail', 'menu', 'profile', 'security', 'appearance'] as $page) {
+            Route::get('settings/'.$page, fn () => Inertia::render('settings/'.$page))->name('playground.settings.'.$page);
+        }
+
+        // Fortify's account endpoints, in a few lines: profile, password and a pretend authenticator (session only).
+        Route::put('user/profile-information', function (Request $request) {
+            $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255']]);
+            $request->user()->forceFill($data)->save();
+
+            return back();
+        });
+        Route::put('user/password', function (Request $request) {
+            $request->validate([
+                'current_password' => ['required', 'current_password'],
+                'password' => ['required', 'confirmed', 'min:8'],
+            ]);
+            $request->user()->forceFill(['password' => $request->input('password')])->save();
+
+            return back();
+        });
+        Route::post('user/two-factor-authentication', fn (Request $request) => tap(back(), fn () => $request->session()->put('demo_2fa', true)));
+        Route::delete('user/two-factor-authentication', fn (Request $request) => tap(back(), fn () => $request->session()->forget(['demo_2fa', 'demo_2fa_confirmed'])));
+        Route::get('user/two-factor-qr-code', fn () => [
+            'svg' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path fill-rule="evenodd" d="M0 0h3v3H0zM5 0h3v3H5zM0 5h3v3H0zM1 1h1v1H1zM6 1h1v1H6zM1 6h1v1H1zM4 4h1v1H4zM6 5h2v1H6zM5 7h1v1H5z"/></svg>',
+            'url' => 'otpauth://totp/playground',
+        ]);
+        Route::get('user/two-factor-secret-key', fn () => ['secretKey' => 'PLAYGROUNDSECRET']);
+        Route::get('user/two-factor-recovery-codes', fn () => ['abcd-1234', 'efgh-5678', 'ijkl-9012', 'mnop-3456']);
+        Route::post('user/confirmed-two-factor-authentication', function (Request $request) {
+            if ($request->input('code') !== '123456') {
+                throw ValidationException::withMessages(['code' => 'Kode tidak valid. Di playground, pakai 123456.']);
+            }
+            $request->session()->put('demo_2fa_confirmed', true);
+
+            return back();
+        });
     });
 });

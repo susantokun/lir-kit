@@ -1,0 +1,15 @@
+import { t } from '@/lir-kit/adapters';
+import { LoginMethodCard } from '@/lir-kit/login-method-card';
+import SettingsPage from '@/layouts/settings-page';
+
+/** How people sign in: password, emailed code, or both, and the rules for the code. */
+export default function LoginMethod() {
+  return (
+    <SettingsPage
+      title={t('Metode masuk')}
+      description={t('Pilih cara pengguna masuk dan atur aturan kode sekali pakai.')}
+    >
+      <LoginMethodCard />
+    </SettingsPage>
+  );
+}

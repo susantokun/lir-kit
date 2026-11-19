@@ -56,10 +56,13 @@ Tag `lir-kit-starter` menaruh berkas ini (tidak menimpa berkas yang sudah ada ke
 | Berkas | Isi |
 |---|---|
 | `resources/js/pages/auth/{login,forgot-password,reset-password,two-factor-challenge,verify-email}.tsx` | halaman auth (memanggil URL bawaan Fortify: `/login`, `/forgot-password`, `/reset-password`, `/two-factor-challenge`, `/email/verification-notification`) |
-| `resources/js/layouts/app-layout.tsx` | bingkai halaman: dipakai tiap halaman sebagai `<AppLayout title="...">` |
+| `resources/js/pages/settings/{login-method,mail,menu,profile,security,appearance}.tsx` | halaman pengaturan: metode masuk, email pengirim dan template, editor menu, profil, keamanan (kata sandi dan 2FA), tema |
+| `resources/js/layouts/app-layout.tsx`, `settings-page.tsx` | bingkai halaman: `<AppLayout title="...">`, dan `<SettingsPage title="...">` untuk halaman pengaturan (menu samping dari folder menu yang memuatnya) |
 | `resources/js/config/brand.ts` | nama aplikasi dan teks panel kiri halaman masuk |
 | `resources/js/config/nav.ts` | menu aplikasi (tiga level); satu baris per halaman |
 | `resources/css/lir-kit-starter.css` | animasi panel masuk; `@import` dari `app.css` Anda |
+
+Halaman profil, keamanan, dan 2FA memanggil endpoint akun Fortify (`PUT /user/profile-information`, `PUT /user/password`, `/user/two-factor-*`); bagikan prop `twoFactor: { enabled, pending }` ke halaman (mis. di middleware Inertia). Halaman pengaturan kit (metode masuk, email, menu) tetap memerlukan ability `lir-kit.manage` di server.
 
 Halaman Inertia dipetakan dari `resources/js/pages`, jadi di Laravel Fortify cukup `Fortify::loginView(fn () => Inertia::render('auth/login', LirKit::loginProps(request())))` dan seterusnya.
 Pembagian tugasnya: **layout dan komponen inti ada di paket** (`@/lir-kit/layouts/app-shell`, `auth-split-layout`, `shell/*`) dan ikut diperbarui; **halaman dan konfigurasi ada di proyek Anda** dan boleh diubah bebas.
