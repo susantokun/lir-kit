@@ -9,6 +9,8 @@ export type KitNavLeaf = {
   key?: string;
   href: string;
   label: string;
+  /** One line of help; a folder shows it under its heading on the settings pages. */
+  description?: string;
   icon: LucideIcon;
   badge?: number;
   standalone?: boolean;
@@ -43,6 +45,7 @@ export type ArrNode = {
   key: string;
   label: string;
   defaultLabel: string;
+  description?: string;
   icon: LucideIcon;
   iconName: string | null;
   href: string;
@@ -68,6 +71,7 @@ type Source = KitNavLeaf & { children?: Source[] };
 
 type Defaults = {
   label: string;
+  description?: string;
   icon: LucideIcon;
   href: string;
   badge?: number;
@@ -125,6 +129,7 @@ export function arrangeNav(
         key,
         label: ov?.title || defaults.label,
         defaultLabel: defaults.label,
+        description: defaults.description,
         icon: iconName ? MENU_ICONS[iconName] : defaults.icon,
         iconName,
         href: defaults.href,
@@ -200,6 +205,7 @@ export function visibleNav(tree: ArrGroup[]): KitNavGroup[] {
       key: n.key,
       href: n.href,
       label: n.label,
+      description: n.description,
       icon: n.icon,
       badge: n.badge,
       standalone: n.standalone,

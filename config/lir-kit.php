@@ -24,6 +24,9 @@ return [
     'users_ability' => null,
     'roles_ability' => null,
 
+    // Ability untuk layar Log Audit (lihat, ekspor, verifikasi integritas). Null = memakai 'ability'.
+    'audit_ability' => null,
+
     /*
     | Hak akses milik aplikasi Anda, ditampilkan di editor peran: ['Nama kelompok' => ['ability.kunci' => 'Label']].
     | Kunci hak akses sama dengan nama ability Gate.
@@ -35,6 +38,27 @@ return [
     | otomatis lolos ability itu. Bila false, Anda memanggil $user->hasLirPermission() sendiri.
     */
     'register_gate' => env('LIR_REGISTER_GATE', false),
+
+    /*
+    | License aplikasi (Pengaturan > Sistem > License). Semuanya mati secara bawaan: tanpa server dan kunci publik,
+    | halaman License hanya menjelaskan cara memasangnya, dan tanpa `enforce` license tidak membatasi apa pun.
+    |   server_url : alamat portal license (https://...), memakai POST /api/licenses/activate dan /validate
+    |   public_key : kunci publik Ed25519 produk ini (base64), untuk memeriksa tanda tangan berkas license
+    |   enforce    : true = tanpa license yang berlaku aplikasi baca-saja (middleware `lir.license-writable`),
+    |                kuota user dan modul dari license berlaku
+    |   exempt_routes : nama rute milik aplikasi yang tetap terbuka saat baca-saja
+    */
+    'license' => [
+        'server_url' => env('LIR_LICENSE_SERVER_URL'),
+        'public_key' => env('LIR_LICENSE_PUBLIC_KEY'),
+        'enforce' => env('LIR_LICENSE_ENFORCE', false),
+        'path' => storage_path('app/private/lir-license'),
+        'timeout' => 10,
+        'exempt_routes' => [],
+    ],
+
+    // Disk untuk logo dan favicon situs (Pengaturan > Situs). Null = disk bawaan aplikasi. Berkas disajikan lewat rute kit, jadi disk privat pun aman.
+    'disk' => null,
 
     /*
     | Rute. `web` untuk halaman masuk (tamu), `api` untuk layar pengaturan (harus login).
@@ -62,6 +86,8 @@ return [
         'roles' => 'lir_roles',
         'role_permissions' => 'lir_role_permissions',
         'role_user' => 'lir_role_user',
+        'audit_logs' => 'lir_audit_logs',
+        'audit_checkpoints' => 'lir_audit_checkpoints',
     ],
 
     /*

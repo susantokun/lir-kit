@@ -61,6 +61,15 @@ it('lists users with search and role filter', function () {
     $this->actingAs($user)->getJson('/lir-kit/users')->assertOk()->assertJsonCount(3, 'data');
 });
 
+it('counts everyone, active and inactive for the cards, whatever the search', function () {
+    $user = adminWith('lir-kit.users');
+    TestUser::query()->create(['name' => 'Budi', 'email' => 'budi@contoh.co.id', 'status' => 'inactive']);
+    TestUser::query()->create(['name' => 'Citra', 'email' => 'citra@contoh.co.id']);
+
+    $this->actingAs($user)->getJson('/lir-kit/users?q=budi')->assertOk()
+        ->assertJsonPath('stats', ['total' => 3, 'active' => 2, 'inactive' => 1]);
+});
+
 it('rejects a duplicate email and unknown roles', function () {
     $user = adminWith('lir-kit.users');
 

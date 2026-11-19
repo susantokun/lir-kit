@@ -176,6 +176,7 @@ export default function Security() {
       title={t('Keamanan')}
       description={t('Kata sandi dan verifikasi dua langkah.')}
     >
+      <div className="grid items-start gap-6 lg:grid-cols-2">
       <FormCard
         title={t('Ganti kata sandi')}
         description={t('Gunakan kata sandi yang panjang dan tidak dipakai di layanan lain.')}
@@ -236,6 +237,7 @@ export default function Security() {
         </FormGrid>
       </FormCard>
       <TwoFactorCard twoFactor={twoFactor ?? { enabled: false, pending: false }} />
+      </div>
     </SettingsPage>
   );
 }

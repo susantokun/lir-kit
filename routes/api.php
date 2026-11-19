@@ -1,10 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Lir\Kit\Http\Controllers\AuditLogController;
+use Lir\Kit\Http\Controllers\LicenseController;
 use Lir\Kit\Http\Controllers\LoginSettingsController;
 use Lir\Kit\Http\Controllers\MailSettingsController;
 use Lir\Kit\Http\Controllers\MenuController;
 use Lir\Kit\Http\Controllers\RolesController;
+use Lir\Kit\Http\Controllers\SiteSettingsController;
 use Lir\Kit\Http\Controllers\UsersController;
 
 /*
@@ -30,6 +33,19 @@ Route::middleware(config('lir-kit.routes.api_middleware'))->prefix(config('lir-k
     Route::put('users/{user}', [UsersController::class, 'update'])->name('users.update');
     Route::delete('users/{user}', [UsersController::class, 'destroy'])->name('users.destroy');
     Route::post('users/{user}/invite', [UsersController::class, 'invite'])->middleware('throttle:10,1')->name('users.invite');
+
+    Route::get('site', [SiteSettingsController::class, 'show'])->name('site.show');
+    Route::post('site', [SiteSettingsController::class, 'update'])->middleware('throttle:30,1')->name('site.update');
+
+    Route::get('license', [LicenseController::class, 'show'])->name('license.show');
+    Route::post('license/activate', [LicenseController::class, 'activate'])->middleware('throttle:10,1')->name('license.activate');
+    Route::post('license/upload', [LicenseController::class, 'upload'])->middleware('throttle:10,1')->name('license.upload');
+    Route::post('license/check', [LicenseController::class, 'check'])->middleware('throttle:10,1')->name('license.check');
+
+    Route::get('audit-log', [AuditLogController::class, 'index'])->name('audit-log.index');
+    Route::get('audit-log/checkpoints', [AuditLogController::class, 'checkpoints'])->name('audit-log.checkpoints');
+    Route::get('audit-log/export', [AuditLogController::class, 'export'])->middleware('throttle:10,1')->name('audit-log.export');
+    Route::post('audit-log/verify', [AuditLogController::class, 'verify'])->middleware('throttle:10,1')->name('audit-log.verify');
 
     Route::get('roles', [RolesController::class, 'index'])->name('roles.index');
     Route::post('roles', [RolesController::class, 'store'])->name('roles.store');

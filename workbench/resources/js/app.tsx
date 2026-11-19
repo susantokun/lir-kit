@@ -16,7 +16,7 @@ const pages: Record<string, { default: ComponentType }> = {
 };
 
 void createInertiaApp({
-    title: (title) => (title ? `${title} - lir-kit playground` : 'lir-kit playground'),
+    title: (title) => (title ? `${title} - LIR-KIT` : 'LIR-KIT'),
     resolve: (name) => {
         const page = pages[`./pages/${name}.tsx`];
 

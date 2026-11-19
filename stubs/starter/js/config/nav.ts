@@ -1,11 +1,15 @@
 import {
+  BadgeCheckIcon,
   FileTextIcon,
+  GlobeIcon,
+  HistoryIcon,
   KeyRoundIcon,
   LayoutDashboardIcon,
+  MailCheckIcon,
   MailIcon,
   MenuIcon,
   PaletteIcon,
-  RouteIcon,
+  ServerCogIcon,
   SettingsIcon,
   ShieldCheckIcon,
   UserRoundIcon,
@@ -15,15 +19,18 @@ import { setLockedKeys, type KitNavGroup } from '@/lir-kit/menu';
 import { t } from '@/lir-kit/adapters';
 
 /** Entries that cannot be hidden in the menu editor (same list as config/lir-kit.php 'menu_locked'). */
-setLockedKeys(['/dashboard', '/settings/menu', 'folder.pengaturan']);
+setLockedKeys(['/dashboard', '/settings/menu', 'folder.pengaturan', 'folder.sistem']);
 
 /** The permission a page needs to show in the menu (the same names as your Gate abilities). Pages not listed are open to everyone signed in. */
 const REQUIRES: Record<string, string> = {
   '/laporan': 'laporan.lihat',
   '/akses/pengguna': 'lir-kit.users',
   '/akses/peran': 'lir-kit.roles',
+  '/akses/audit': 'lir-kit.manage',
   '/settings/login-method': 'lir-kit.manage',
+  '/settings/site': 'lir-kit.manage',
   '/settings/mail': 'lir-kit.manage',
+  '/settings/license': 'lir-kit.manage',
   '/settings/menu': 'lir-kit.manage',
 };
 
@@ -58,33 +65,47 @@ export function buildNav(permissions?: string[]): KitNavGroup[] {
           key: 'folder.akses',
           href: '/akses/pengguna',
           label: t('Akses'),
-          icon: KeyRoundIcon,
+          description: t('Atur siapa yang bisa masuk, apa yang boleh mereka lakukan, dan pantau aktivitasnya.'),
+          icon: ShieldCheckIcon,
           children: [
             { href: '/akses/pengguna', label: t('Pengguna'), icon: UsersIcon },
-            { href: '/akses/peran', label: t('Peran'), icon: ShieldCheckIcon },
-          ],
-        },
-        {
-          key: 'folder.pengaturan',
-          href: '/settings/login-method',
-          label: t('Pengaturan'),
-          icon: SettingsIcon,
-          children: [
-            { href: '/settings/login-method', label: t('Metode masuk'), icon: RouteIcon },
-            { href: '/settings/mail', label: t('Email & template'), icon: MailIcon },
-            { href: '/settings/menu', label: t('Menu'), icon: MenuIcon },
+            { href: '/akses/peran', label: t('Peran & Hak Akses'), icon: KeyRoundIcon },
+            { href: '/settings/login-method', label: t('Metode Masuk'), icon: MailCheckIcon },
+            { href: '/akses/audit', label: t('Log Audit'), icon: HistoryIcon },
           ],
         },
       ],
     },
     {
-      key: 'group.akun',
-      label: t('Akun'),
+      key: 'group.lainnya',
+      label: t('Lainnya'),
       items: [
+        {
+          key: 'folder.pengaturan',
+          href: '/settings/site',
+          label: t('Pengaturan'),
+          description: t('Atur identitas situs, email pengirim, menu, dan lisensi aplikasi.'),
+          icon: SettingsIcon,
+          children: [
+            { href: '/settings/site', label: t('Situs'), icon: GlobeIcon },
+            { href: '/settings/mail', label: t('Email'), icon: MailIcon },
+            {
+              key: 'folder.sistem',
+              href: '/settings/menu',
+              label: t('Sistem'),
+              icon: ServerCogIcon,
+              children: [
+                { href: '/settings/menu', label: t('Menu'), icon: MenuIcon },
+                { href: '/settings/license', label: t('License'), icon: BadgeCheckIcon },
+              ],
+            },
+          ],
+        },
         {
           key: 'folder.akun',
           href: '/settings/profile',
-          label: t('Akun saya'),
+          label: t('Akun'),
+          description: t('Kelola profil, keamanan, dan tampilan akun Anda.'),
           icon: UserRoundIcon,
           children: [
             { href: '/settings/profile', label: t('Profil'), icon: UserRoundIcon },
@@ -96,15 +117,13 @@ export function buildNav(permissions?: string[]): KitNavGroup[] {
     },
   ];
 
+  /** Keeps what the person may open; a folder left empty goes too (works at every level). */
+  const prune = <T extends { href: string; children?: T[] }>(entries: T[]): T[] =>
+    entries
+      .map((entry) => (entry.children ? { ...entry, children: prune(entry.children) } : entry))
+      .filter((entry) => (entry.children ? entry.children.length > 0 : allowed(entry.href)));
+
   return groups
-    .map((group) => ({
-      ...group,
-      items: group.items
-        .map((item) => ({
-          ...item,
-          children: item.children?.filter((child) => allowed(child.href)),
-        }))
-        .filter((item) => (item.children ? item.children.length > 0 : allowed(item.href))),
-    }))
+    .map((group) => ({ ...group, items: prune(group.items) }))
     .filter((group) => group.items.length > 0);
 }

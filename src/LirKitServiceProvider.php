@@ -6,6 +6,10 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Lir\Kit\Console\GrantRoleCommand;
+use Lir\Kit\Console\LicenseCheckCommand;
+use Lir\Kit\Console\VerifyAuditCommand;
+use Lir\Kit\Http\Middleware\EnsureLicenseWritable;
+use Lir\Kit\Support\Licensing\LicenseState;
 use Lir\Kit\Contracts\LoginHooks;
 use Lir\Kit\Contracts\UserDirectory;
 use Lir\Kit\Services\Access;
@@ -24,6 +28,7 @@ class LirKitServiceProvider extends ServiceProvider
         $this->app->bindIf(LoginHooks::class, DefaultLoginHooks::class);
         $this->app->bindIf(UserDirectory::class, EloquentUserDirectory::class);
         $this->app->singleton(Access::class);
+        $this->app->singleton(LicenseState::class);
     }
 
     public function boot(): void
@@ -35,6 +40,7 @@ class LirKitServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
 
         $this->app['router']->aliasMiddleware('lir.password-allowed', EnsurePasswordLoginAllowed::class);
+        $this->app['router']->aliasMiddleware('lir.license-writable', EnsureLicenseWritable::class);
 
         // The sender email saved in the app takes over from the .env one (also for queue workers, which boot the app too).
         $this->app->booted(fn () => $this->app->make(MailSettings::class)->apply());
@@ -49,7 +55,7 @@ class LirKitServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([GrantRoleCommand::class]);
+            $this->commands([GrantRoleCommand::class, VerifyAuditCommand::class, LicenseCheckCommand::class]);
 
             $this->publishes([__DIR__.'/../config/lir-kit.php' => config_path('lir-kit.php')], 'lir-kit-config');
             $this->publishes([__DIR__.'/../resources/views' => resource_path('views/vendor/lir-kit')], 'lir-kit-views');

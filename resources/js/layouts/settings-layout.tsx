@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { t } from '../adapters';
 import type { KitNavGroup, KitNavLeaf } from '../menu';
 import { leavesOf } from '../nav';
+import { PageActionsSlot } from './page-actions';
 
 type Section = { label: string; links: KitNavLeaf[] };
 
@@ -17,7 +18,11 @@ function sectionsFor(groups: KitNavGroup[], path: string) {
   const owner = folders.find((item) => leavesOf(item).some(inPath));
 
   if (!owner) {
-    return { heading: undefined, sections: [] as Section[] };
+    return {
+      heading: undefined,
+      headingDescription: undefined,
+      sections: [] as Section[],
+    };
   }
 
   const own = owner.children!.filter((c) => !c.children);
@@ -29,7 +34,11 @@ function sectionsFor(groups: KitNavGroup[], path: string) {
     .map((s) => ({ ...s, links: s.links.filter((l) => !l.standalone) }))
     .filter((s) => s.links.length > 0);
 
-  return { heading: owner.label, sections };
+  return {
+    heading: owner.label,
+    headingDescription: owner.description,
+    sections,
+  };
 }
 
 /**
@@ -55,9 +64,16 @@ export function SettingsLayout({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold tracking-tight">
-        {heading ?? found.heading ?? t('Pengaturan')}
-      </h1>
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {heading ?? found.heading ?? t('Pengaturan')}
+        </h1>
+        {found.headingDescription && (
+          <p className="text-sm text-muted-foreground">
+            {found.headingDescription}
+          </p>
+        )}
+      </div>
       <Separator />
       <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
         {found.sections.length > 0 && (
@@ -94,11 +110,14 @@ export function SettingsLayout({
           </nav>
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-6">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            {description && (
-              <p className="text-sm text-muted-foreground">{description}</p>
-            )}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-lg font-semibold">{title}</h2>
+              {description && (
+                <p className="text-sm text-muted-foreground">{description}</p>
+              )}
+            </div>
+            <PageActionsSlot />
           </div>
           <Separator />
           {children}

@@ -15,14 +15,11 @@ import {
   FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  NativeSelect,
-  NativeSelectOption,
-} from '@/components/ui/native-select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { ApiError, api, notify, t } from './adapters';
+import { SearchSelect } from './search-select';
 
 type Mail = {
   enabled: boolean;
@@ -144,23 +141,16 @@ export function MailSettingsCard() {
                 <FieldLabel htmlFor="mail-encryption">
                   {t('Enkripsi')}
                 </FieldLabel>
-                <NativeSelect
+                <SearchSelect
                   id="mail-encryption"
                   value={form.encryption}
-                  onChange={(e) =>
-                    set('encryption', e.target.value as Mail['encryption'])
-                  }
-                >
-                  <NativeSelectOption value="tls">
-                    {t('TLS / STARTTLS (port 587)')}
-                  </NativeSelectOption>
-                  <NativeSelectOption value="ssl">
-                    {t('SSL (port 465)')}
-                  </NativeSelectOption>
-                  <NativeSelectOption value="none">
-                    {t('Tanpa enkripsi')}
-                  </NativeSelectOption>
-                </NativeSelect>
+                  onChange={(v) => set('encryption', v as Mail['encryption'])}
+                  options={[
+                    { value: 'tls', label: t('TLS / STARTTLS (port 587)') },
+                    { value: 'ssl', label: t('SSL (port 465)') },
+                    { value: 'none', label: t('Tanpa enkripsi') },
+                  ]}
+                />
               </Field>
               <Field>
                 <FieldLabel htmlFor="mail-username">{t('Username')}</FieldLabel>

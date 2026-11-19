@@ -3,7 +3,7 @@ import type { AuthBrand } from '@/lir-kit/layouts/auth-split-layout';
 import { t } from '@/lir-kit/adapters';
 
 /** Your app's name. Used in the sidebar, the sign-out dialog and the sign-in pages. */
-export const APP_NAME = 'lir-kit';
+export const APP_NAME = 'LIR-KIT';
 
 /** One line under the name in the sidebar. */
 export const APP_SUBTITLE = t('Starter kit');

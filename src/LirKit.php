@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Lir\Kit\Models\MenuSetting;
 use Lir\Kit\Services\Access;
 use Lir\Kit\Services\LoginMethod;
+use Lir\Kit\Services\SiteSettings;
+use Lir\Kit\Support\Licensing\LicenseState;
 
 /**
  * What the application's own pages need from the kit.
@@ -45,6 +47,38 @@ class LirKit
     public static function permissions(?Authenticatable $user): array
     {
         return app(Access::class)->permissionsOf($user);
+    }
+
+    /**
+     * How the site presents itself (Pengaturan > Situs), to share with every page, also the sign-in ones (e.g. as the
+     * Inertia prop `site`): the name (the app's own name until one is saved), a short line, a contact email, and the
+     * URLs of the logo and favicon (null until uploaded).
+     *
+     * @return array{name: string, tagline: ?string, contact_email: ?string, logo: ?string, favicon: ?string}
+     */
+    public static function site(): array
+    {
+        try {
+            return app(SiteSettings::class)->present();
+        } catch (\Throwable) {
+            // The settings table does not exist yet (fresh install, running migrations).
+            return ['name' => (string) config('app.name'), 'tagline' => null, 'contact_email' => null, 'logo' => null, 'favicon' => null];
+        }
+    }
+
+    /**
+     * What every page needs for a license banner (share it as the Inertia prop `license`): the status, whether the
+     * app is read-only, a message for the person, and the expiry. Quiet (no message) until enforcement is on.
+     *
+     * @return array{status: string, read_only: bool, message: string|null, expires_at: string|null, days_left: int|null}
+     */
+    public static function license(): array
+    {
+        try {
+            return app(LicenseState::class)->shared();
+        } catch (\Throwable) {
+            return ['status' => 'unconfigured', 'read_only' => false, 'message' => null, 'expires_at' => null, 'days_left' => null];
+        }
     }
 
     /**

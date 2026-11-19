@@ -5,11 +5,13 @@ namespace Lir\Kit\Support;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Log;
 use Lir\Kit\Contracts\LoginHooks;
+use Lir\Kit\Services\AuditTrail;
+use Throwable;
 
 /**
  * The behaviour when the application has not bound its own LoginHooks: any account may receive a code
  * unless it says it is inactive (an isActive() method), nothing is asked of a second factor, and
- * audit entries go to the log.
+ * audit entries go to the tamper-evident audit log (AuditTrail), or to the application log when that table is missing.
  */
 class DefaultLoginHooks implements LoginHooks
 {
@@ -34,6 +36,11 @@ class DefaultLoginHooks implements LoginHooks
 
     public function audit(string $action, ?Authenticatable $actor, mixed $before = null, mixed $after = null): void
     {
-        Log::info("lir-kit: {$action}", ['actor' => $actor?->getAuthIdentifier(), 'before' => $before, 'after' => $after]);
+        try {
+            app(AuditTrail::class)->log($action, $actor, $before, $after);
+        } catch (Throwable $e) {
+            // The audit table may not exist yet (migrations not run): never break the action itself, keep a line in the log.
+            Log::info("lir-kit: {$action}", ['actor' => $actor?->getAuthIdentifier(), 'before' => $before, 'after' => $after, 'audit_error' => $e->getMessage()]);
+        }
     }
 }

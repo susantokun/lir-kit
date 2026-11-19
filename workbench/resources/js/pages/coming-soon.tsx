@@ -4,10 +4,10 @@ import AppLayout from '@/layouts/app-layout';
 import { PageHeader } from '@/lir-kit/layouts/page-header';
 
 /** A page the starter will fill in a later phase (users, roles) or that an app builds itself (reports). */
-export default function ComingSoon({ title }: { title: string }) {
+export default function ComingSoon({ title, description }: { title: string; description?: string }) {
     return (
         <AppLayout title={title}>
-            <PageHeader title={title} />
+            <PageHeader title={title} description={description} />
             <Card>
                 <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
                     <span className="flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">

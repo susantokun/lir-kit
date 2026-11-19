@@ -8,7 +8,8 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError, api, notify, t } from '../adapters';
-import { FormDialog } from '../form-dialog';
+import { FormDrawer } from '../form-drawer';
+import { PageActions } from '../layouts/page-actions';
 import { NoticeDialog } from '../shell/notice-dialog';
 
 type Role = {
@@ -120,12 +121,12 @@ export function RolesPanel() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
+      <PageActions>
         <Button onClick={() => edit(null)}>
           <PlusIcon data-icon="inline-start" />
           {t('Tambah peran')}
         </Button>
-      </div>
+      </PageActions>
 
       {roles === null && <Skeleton className="h-24 w-full" />}
       <div className="grid gap-3 md:grid-cols-2">
@@ -171,7 +172,7 @@ export function RolesPanel() {
         ))}
       </div>
 
-      <FormDialog
+      <FormDrawer
         open={form !== null}
         onClose={() => setForm(null)}
         title={form?.system ? form.name : form?.id ? t('Ubah peran') : t('Tambah peran')}
@@ -224,7 +225,7 @@ export function RolesPanel() {
             </div>
           </>
         )}
-      </FormDialog>
+      </FormDrawer>
 
       <NoticeDialog
         open={removing !== null}

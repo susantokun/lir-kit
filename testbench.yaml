@@ -31,7 +31,7 @@ workbench:
       to: public/build
 
 env:
-  APP_NAME: "lir-kit playground"
+  APP_NAME: "LIR-KIT"
   APP_ENV: local
   APP_DEBUG: true
   DB_CONNECTION: sqlite

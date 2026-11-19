@@ -1,19 +1,30 @@
 import {
   MailPlusIcon,
+  MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
   SearchIcon,
   SendIcon,
+  ShieldIcon,
   Trash2Icon,
+  UserCheckIcon,
+  UserRoundXIcon,
+  UsersRoundIcon,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
@@ -24,7 +35,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ApiError, api, notify, t } from '../adapters';
-import { FormDialog } from '../form-dialog';
+import { FormDrawer } from '../form-drawer';
+import { PageActions } from '../layouts/page-actions';
+import { SearchSelect } from '../search-select';
 import { NoticeDialog } from '../shell/notice-dialog';
 import { UserAvatar } from '../shell/user-menu';
 
@@ -41,9 +54,13 @@ type Listing = {
   meta: { total: number; page: number; last_page: number; per_page: number };
   roles: RoleRef[];
   supports_status: boolean;
+  stats: { total: number; active: number | null; inactive: number | null };
 };
+/** Which part of a person the dialog changes: everything (adding), the profile, or the roles. */
+type Part = 'all' | 'profile' | 'roles';
 type Form = {
   id: string | null;
+  part: Part;
   name: string;
   email: string;
   status: 'active' | 'inactive';
@@ -51,8 +68,41 @@ type Form = {
   send_invitation: boolean;
 };
 
+const ACTIVE_BADGE =
+  'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+const INACTIVE_BADGE =
+  'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400';
+
+/** One figure above the list. */
+function Stat({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: number;
+}) {
+  return (
+    <Card size="sm">
+      <CardContent className="flex items-center gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+          {icon}
+        </span>
+        <div className="flex flex-col">
+          <span className="text-2xl leading-none font-semibold tabular-nums">
+            {value}
+          </span>
+          <span className="text-xs text-muted-foreground">{label}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 const EMPTY: Form = {
   id: null,
+  part: 'all',
   name: '',
   email: '',
   status: 'active',
@@ -75,6 +125,7 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState<UserRow | null>(null);
+  const [deactivating, setDeactivating] = useState<UserRow | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -110,12 +161,13 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
     void load();
   }, [load]);
 
-  const edit = (user: UserRow | null) => {
+  const edit = (user: UserRow | null, part: Part = 'profile') => {
     setErrors({});
     setForm(
       user
         ? {
             id: user.id,
+            part,
             name: user.name,
             email: user.email,
             status: user.status ?? 'active',
@@ -181,6 +233,31 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
     }
   };
 
+  const setStatus = async (user: UserRow, status: 'active' | 'inactive') => {
+    try {
+      await api(`/users/${user.id}`, {
+        method: 'PUT',
+        body: {
+          name: user.name,
+          email: user.email,
+          roles: user.roles.map((r) => r.id),
+          status,
+        },
+      });
+      notify(
+        status === 'active'
+          ? t('Pengguna diaktifkan kembali.')
+          : t('Pengguna dinonaktifkan.'),
+      );
+      await load();
+    } catch (e) {
+      const err = e as ApiError;
+      notify(err.errors ? Object.values(err.errors).flat().join(' ') : err.message, true);
+    }
+
+    setDeactivating(null);
+  };
+
   const invite = async (user: UserRow) => {
     try {
       await api(`/users/${user.id}/invite`, { method: 'POST' });
@@ -195,6 +272,30 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
 
   return (
     <div className="flex flex-col gap-4">
+      {listing && (
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <Stat
+            icon={<UsersRoundIcon className="size-5" />}
+            label={t('Total pengguna')}
+            value={listing.stats.total}
+          />
+          {listing.stats.active !== null && (
+            <Stat
+              icon={<UserCheckIcon className="size-5" />}
+              label={t('Aktif')}
+              value={listing.stats.active}
+            />
+          )}
+          {listing.stats.inactive !== null && (
+            <Stat
+              icon={<UserRoundXIcon className="size-5" />}
+              label={t('Nonaktif')}
+              value={listing.stats.inactive}
+            />
+          )}
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -206,26 +307,28 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <NativeSelect
-          aria-label={t('Filter peran')}
+        <SearchSelect
+          ariaLabel={t('Filter peran')}
+          className="w-full sm:w-52"
+          searchPlaceholder={t('Cari peran…')}
           value={role}
-          onChange={(e) => {
-            setRole(e.target.value);
+          onChange={(v) => {
+            setRole(v);
             setPage(1);
           }}
-        >
-          <NativeSelectOption value="">{t('Semua peran')}</NativeSelectOption>
-          {listing?.roles.map((r) => (
-            <NativeSelectOption key={r.id} value={String(r.id)}>
-              {r.name}
-            </NativeSelectOption>
-          ))}
-        </NativeSelect>
+          options={[
+            { value: '', label: t('Semua peran') },
+            ...(listing?.roles.map((r) => ({ value: String(r.id), label: r.name })) ?? []),
+          ]}
+        />
+      </div>
+
+      <PageActions>
         <Button onClick={() => edit(null)}>
           <PlusIcon data-icon="inline-start" />
-          {t('Undang pengguna')}
+          {t('Tambah pengguna')}
         </Button>
-      </div>
+      </PageActions>
 
       <Card className="gap-0 overflow-hidden py-0">
         <Table>
@@ -234,7 +337,9 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
               <TableHead>{t('Pengguna')}</TableHead>
               <TableHead>{t('Peran')}</TableHead>
               {listing?.supports_status && <TableHead>{t('Status')}</TableHead>}
-              <TableHead className="w-32 text-right">{t('Aksi')}</TableHead>
+              <TableHead className="w-16">
+                <span className="sr-only">{t('Aksi')}</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -273,38 +378,66 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
                     </TableCell>
                     {listing.supports_status && (
                       <TableCell>
-                        <Badge variant={user.status === 'inactive' ? 'outline' : 'default'}>
+                        <Badge
+                          variant="outline"
+                          className={user.status === 'inactive' ? INACTIVE_BADGE : ACTIVE_BADGE}
+                        >
                           {user.status === 'inactive' ? t('Nonaktif') : t('Aktif')}
                         </Badge>
                       </TableCell>
                     )}
                     <TableCell>
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t('Kirim ulang undangan')}
-                          onClick={() => invite(user)}
-                        >
-                          <SendIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t('Ubah')}
-                          onClick={() => edit(user)}
-                        >
-                          <PencilIcon />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t('Hapus')}
-                          disabled={user.id === currentUserId}
-                          onClick={() => setRemoving(user)}
-                        >
-                          <Trash2Icon />
-                        </Button>
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger
+                            render={
+                              <Button variant="ghost" size="icon-sm" aria-label={t('Aksi')} />
+                            }
+                          >
+                            <MoreHorizontalIcon />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="min-w-52">
+                            <DropdownMenuItem onClick={() => edit(user, 'profile')}>
+                              <PencilIcon className="text-muted-foreground" />
+                              {t('Ubah profil')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => edit(user, 'roles')}>
+                              <ShieldIcon className="text-muted-foreground" />
+                              {t('Ubah peran')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => invite(user)}>
+                              <SendIcon className="text-muted-foreground" />
+                              {t('Kirim ulang undangan')}
+                            </DropdownMenuItem>
+                            {user.id !== currentUserId && (
+                              <>
+                                <DropdownMenuSeparator />
+                                {listing.supports_status &&
+                                  (user.status === 'inactive' ? (
+                                    <DropdownMenuItem onClick={() => setStatus(user, 'active')}>
+                                      <UserCheckIcon className="text-muted-foreground" />
+                                      {t('Aktifkan kembali')}
+                                    </DropdownMenuItem>
+                                  ) : (
+                                    <DropdownMenuItem
+                                      variant="destructive"
+                                      onClick={() => setDeactivating(user)}
+                                    >
+                                      <UserRoundXIcon />
+                                      {t('Nonaktifkan')}
+                                    </DropdownMenuItem>
+                                  ))}
+                                <DropdownMenuItem
+                                  variant="destructive"
+                                  onClick={() => setRemoving(user)}
+                                >
+                                  <Trash2Icon />
+                                  {t('Hapus')}
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -337,58 +470,54 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
         </div>
       )}
 
-      <FormDialog
+      <FormDrawer
         open={form !== null}
         onClose={() => setForm(null)}
-        title={form?.id ? t('Ubah pengguna') : t('Undang pengguna')}
+        title={
+          form?.part === 'roles'
+            ? t('Ubah peran')
+            : form?.id
+              ? t('Ubah profil')
+              : t('Tambah pengguna')
+        }
         description={
           form?.id
             ? undefined
             : t('Pengguna baru menerima email undangan untuk masuk.')
         }
-        submitLabel={form?.id ? t('Simpan') : t('Undang')}
+        submitLabel={form?.id ? t('Simpan') : t('Tambah')}
         busy={saving}
         onSubmit={save}
       >
         {form && (
           <>
             {error('user') && <FieldError>{error('user')}</FieldError>}
-            <Field data-invalid={!!error('name')}>
-              <FieldLabel htmlFor="u-name">{t('Nama')}</FieldLabel>
-              <Input
-                id="u-name"
-                value={form.name}
-                aria-invalid={!!error('name')}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              {error('name') && <FieldError>{error('name')}</FieldError>}
-            </Field>
-            <Field data-invalid={!!error('email')}>
-              <FieldLabel htmlFor="u-email">{t('Email')}</FieldLabel>
-              <Input
-                id="u-email"
-                type="email"
-                value={form.email}
-                aria-invalid={!!error('email')}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-              {error('email') && <FieldError>{error('email')}</FieldError>}
-            </Field>
-            {form.id && listing?.supports_status && (
-              <Field>
-                <FieldLabel htmlFor="u-status">{t('Status')}</FieldLabel>
-                <NativeSelect
-                  id="u-status"
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm({ ...form, status: e.target.value as Form['status'] })
-                  }
-                >
-                  <NativeSelectOption value="active">{t('Aktif')}</NativeSelectOption>
-                  <NativeSelectOption value="inactive">{t('Nonaktif')}</NativeSelectOption>
-                </NativeSelect>
-              </Field>
+            {form.part !== 'roles' && (
+              <>
+                <Field data-invalid={!!error('name')}>
+                  <FieldLabel htmlFor="u-name">{t('Nama')}</FieldLabel>
+                  <Input
+                    id="u-name"
+                    value={form.name}
+                    aria-invalid={!!error('name')}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  />
+                  {error('name') && <FieldError>{error('name')}</FieldError>}
+                </Field>
+                <Field data-invalid={!!error('email')}>
+                  <FieldLabel htmlFor="u-email">{t('Email')}</FieldLabel>
+                  <Input
+                    id="u-email"
+                    type="email"
+                    value={form.email}
+                    aria-invalid={!!error('email')}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  />
+                  {error('email') && <FieldError>{error('email')}</FieldError>}
+                </Field>
+              </>
             )}
+            {form.part !== 'profile' && (
             <Field data-invalid={!!error('roles')}>
               <FieldLabel>{t('Peran')}</FieldLabel>
               <div className="flex flex-col gap-2 rounded-lg border p-3">
@@ -411,6 +540,7 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
               </div>
               {error('roles') && <FieldError>{error('roles')}</FieldError>}
             </Field>
+            )}
             {!form.id && (
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
@@ -423,7 +553,7 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
             )}
           </>
         )}
-      </FormDialog>
+      </FormDrawer>
 
       <NoticeDialog
         open={removing !== null}
@@ -435,6 +565,17 @@ export function UsersPanel({ currentUserId }: { currentUserId?: string }) {
         confirmLabel={t('Ya, hapus')}
         onConfirm={remove}
         onCancel={() => setRemoving(null)}
+        dismissible
+      />
+
+      <NoticeDialog
+        open={deactivating !== null}
+        tone="danger"
+        title={t('Nonaktifkan {nama}?', { nama: deactivating?.name })}
+        description={t('Akun tidak bisa masuk lagi sampai diaktifkan kembali.')}
+        confirmLabel={t('Ya, nonaktifkan')}
+        onConfirm={() => deactivating && setStatus(deactivating, 'inactive')}
+        onCancel={() => setDeactivating(null)}
         dismissible
       />
     </div>

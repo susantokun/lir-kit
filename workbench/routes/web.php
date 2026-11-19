@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -19,6 +20,9 @@ use Workbench\App\Models\User;
 */
 Route::middleware(['web', HandleInertiaRequests::class])->group(function () {
     Route::get('/', fn () => redirect('/dashboard'));
+
+    // The playground's favicon (the same mark as the sidebar's logo tile); a project puts its own in public/.
+    Route::get('favicon.svg', fn () => response(file_get_contents(dirname(__DIR__).'/resources/favicon.svg'), 200, ['Content-Type' => 'image/svg+xml', 'Cache-Control' => 'public, max-age=3600']));
 
     Route::middleware('guest')->group(function () {
         Route::get('login', fn (Request $request) => Inertia::render('auth/login', [
@@ -106,15 +110,39 @@ Route::middleware(['web', HandleInertiaRequests::class])->group(function () {
 
     Route::middleware('auth')->group(function () {
         Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('playground.dashboard');
-        Route::get('laporan', fn () => Inertia::render('coming-soon', ['title' => 'Laporan']));
+        Route::get('laporan', fn () => Inertia::render('reports'));
         Route::get('akses/pengguna', fn () => Inertia::render('access/users'));
         Route::get('akses/peran', fn () => Inertia::render('access/roles'));
-        Route::redirect('settings', '/settings/login-method');
-        foreach (['login-method', 'mail', 'menu', 'profile', 'security', 'appearance'] as $page) {
+        Route::get('akses/audit', fn () => Inertia::render('access/audit'));
+        Route::redirect('settings', '/settings/site');
+        foreach (['site', 'login-method', 'mail', 'menu', 'license', 'profile', 'security', 'appearance'] as $page) {
             Route::get('settings/'.$page, fn () => Inertia::render('settings/'.$page))->name('playground.settings.'.$page);
         }
 
         // Fortify's account endpoints, in a few lines: profile, password and a pretend authenticator (session only).
+        // The profile photo: the app's own route (the kit only gives the picker). Served back through a route, kept off the public disk.
+        Route::post('profile/avatar', function (Request $request) {
+            $data = $request->validate(['avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']]);
+            $user = $request->user();
+            $user->avatar_path && Storage::disk('local')->delete($user->avatar_path);
+            $user->forceFill(['avatar_path' => $data['avatar']->store('avatars', 'local')])->save();
+
+            return back();
+        });
+        Route::delete('profile/avatar', function (Request $request) {
+            $user = $request->user();
+            $user->avatar_path && Storage::disk('local')->delete($user->avatar_path);
+            $user->forceFill(['avatar_path' => null])->save();
+
+            return back();
+        });
+        Route::get('avatar/{user}', function (string $user) {
+            $path = User::query()->whereKey($user)->value('avatar_path');
+            abort_if($path === null || ! Storage::disk('local')->exists($path), 404);
+
+            return Storage::disk('local')->response($path, null, ['Cache-Control' => 'private, max-age=3600', 'X-Content-Type-Options' => 'nosniff']);
+        });
+
         Route::put('user/profile-information', function (Request $request) {
             $data = $request->validate(['name' => ['required', 'string', 'max:255'], 'email' => ['required', 'email', 'max:255']]);
             $request->user()->forceFill($data)->save();

@@ -154,7 +154,7 @@ export function AppShell({
         </header>
         <main
           aria-label={title}
-          className="flex w-full flex-1 flex-col gap-6 p-4 motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in motion-safe:slide-in-from-bottom-2 sm:p-6 lg:p-8"
+          className="flex w-full flex-1 flex-col gap-6 p-4 motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in sm:p-6 lg:p-8"
         >
           {children}
         </main>

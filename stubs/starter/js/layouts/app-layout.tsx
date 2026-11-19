@@ -1,15 +1,20 @@
 import { usePage } from '@inertiajs/react';
 import { PaletteIcon, ShieldCheckIcon, UserRoundIcon } from 'lucide-react';
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import { t } from '@/lir-kit/adapters';
 import { AppShell } from '@/lir-kit/layouts/app-shell';
 import { applyMenu, type KitNavGroup, type MenuOverride } from '@/lir-kit/menu';
+import { LicenseBanner, type SharedLicense } from '@/lir-kit/shell/license-banner';
 import type { ShellUser } from '@/lir-kit/shell/user-menu';
 import { APP_NAME, APP_SUBTITLE } from '@/config/brand';
 import { buildNav } from '@/config/nav';
 
 type Shared = {
   auth: { user: ShellUser | null };
+  /** From LirKit::site(): the name, logo and favicon saved in Pengaturan > Situs. Without it APP_NAME is used. */
+  site?: { name: string; logo: string | null; favicon: string | null };
+  /** From LirKit::license(): shows a strip when the license is about to expire or the app is read-only. */
+  license?: SharedLicense;
   menuOverrides?: MenuOverride[];
   /** From LirKit::permissions(); when the app does not share it, the whole menu shows. */
   permissions?: string[];
@@ -40,21 +45,35 @@ export default function AppLayout({
   title: string;
   children: ReactNode;
 }) {
-  const { auth } = usePage<Shared>().props;
+  const { auth, site, license } = usePage<Shared>().props;
   const groups = useNavGroups();
+  const favicon = site?.favicon ?? null;
+
+  useEffect(() => {
+    if (!favicon) {
+      return;
+    }
+
+    const link =
+      document.querySelector<HTMLLinkElement>('link[rel~="icon"]') ??
+      document.head.appendChild(Object.assign(document.createElement('link'), { rel: 'icon' }));
+    link.href = favicon;
+    link.removeAttribute('type');
+  }, [favicon]);
 
   return (
     <AppShell
       title={title}
       groups={groups}
       user={auth.user}
-      brand={{ name: APP_NAME, subtitle: APP_SUBTITLE }}
+      brand={{ name: site?.name ?? APP_NAME, subtitle: APP_SUBTITLE, logo: site?.logo ?? undefined }}
       userLinks={[
         { label: t('Profil'), href: '/settings/profile', icon: UserRoundIcon },
         { label: t('Keamanan'), href: '/settings/security', icon: ShieldCheckIcon },
         { label: t('Tampilan'), href: '/settings/appearance', icon: PaletteIcon },
       ]}
     >
+      <LicenseBanner license={license} />
       {children}
     </AppShell>
   );

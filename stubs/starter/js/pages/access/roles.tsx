@@ -6,7 +6,7 @@ import SettingsPage from '@/layouts/settings-page';
 export default function Roles() {
   return (
     <SettingsPage
-      title={t('Peran')}
+      title={t('Peran & Hak Akses')}
       description={t('Kumpulan hak akses yang bisa diberikan kepada pengguna.')}
     >
       <RolesPanel />

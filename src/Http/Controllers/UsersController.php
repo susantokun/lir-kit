@@ -18,6 +18,7 @@ use Lir\Kit\Contracts\UserDirectory;
 use Lir\Kit\Models\Role;
 use Lir\Kit\Services\Access;
 use Lir\Kit\Services\UserInvitation;
+use Lir\Kit\Support\Licensing\LicenseState;
 
 /**
  * The Pengguna screen: list, invite, change (name, email, status, roles) and remove people. The users stay the
@@ -32,6 +33,7 @@ class UsersController extends Controller
         private Access $access,
         private LoginHooks $hooks,
         private UserInvitation $invitation,
+        private LicenseState $license,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -59,7 +61,29 @@ class UsersController extends Controller
             'meta' => ['total' => $page->total(), 'page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage()],
             'roles' => Role::query()->orderBy('name')->get(['id', 'key', 'name'])->all(),
             'supports_status' => $this->users->supportsStatus(),
+            'stats' => $this->stats(),
         ]);
+    }
+
+    /**
+     * Headcount for the cards above the list, whatever the search or filter: everyone, and (when accounts have a
+     * status) how many are active and inactive.
+     *
+     * @return array{total: int, active: int|null, inactive: int|null}
+     */
+    private function stats(): array
+    {
+        $total = $this->users->query()->count();
+
+        if (! $this->users->supportsStatus()) {
+            return ['total' => $total, 'active' => null, 'inactive' => null];
+        }
+
+        return [
+            'total' => $total,
+            'active' => $this->users->query()->where('status', 'active')->count(),
+            'inactive' => $this->users->query()->where('status', 'inactive')->count(),
+        ];
     }
 
     public function store(Request $request): JsonResponse
@@ -74,6 +98,7 @@ class UsersController extends Controller
             'send_invitation' => ['boolean'],
         ]);
         $roleIds = $this->validRoleIds($data['roles'] ?? []);
+        $this->license->guardUserQuota();
 
         $attributes = ['name' => $data['name'], 'email' => $data['email'], 'password' => Hash::make(Str::random(40))];
 
@@ -114,6 +139,10 @@ class UsersController extends Controller
 
         if ($isSelf && ($data['status'] ?? 'active') === 'inactive') {
             $this->fail(__('Anda tidak bisa menonaktifkan akun Anda sendiri.'));
+        }
+
+        if ($this->users->supportsStatus() && ($data['status'] ?? null) === 'active' && $user->getAttribute('status') === 'inactive') {
+            $this->license->guardUserQuota();
         }
 
         $this->guardLastSuperadmin($user, $roleIds, ($data['status'] ?? 'active') === 'inactive');

@@ -1,25 +1,76 @@
-import { useForm, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { CheckIcon } from 'lucide-react';
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { t } from '@/lir-kit/adapters';
+import { notify, t } from '@/lir-kit/adapters';
+import { ImagePicker } from '@/lir-kit/image-picker';
 import { FormCard, FormGrid } from '@/lir-kit/layouts/form-card';
 import { UserAvatar, type ShellUser } from '@/lir-kit/shell/user-menu';
 import SettingsPage from '@/layouts/settings-page';
 
-/** The person's name and email (Fortify: PUT /user/profile-information). */
+/**
+ * The person's photo (POST and DELETE /profile/avatar, a route of your app: store the file, share its URL as
+ * `auth.user.avatar`), name and email (Fortify: PUT /user/profile-information).
+ */
 export default function Profile() {
   const { auth } = usePage<{ auth: { user: ShellUser | null } }>().props;
+  const [uploading, setUploading] = useState(false);
   const form = useForm({
     name: auth.user?.name ?? '',
     email: auth.user?.email ?? '',
   });
+
+  const uploadAvatar = (file: File | null) => {
+    if (!file) {
+      return;
+    }
+
+    router.post(
+      '/profile/avatar',
+      { avatar: file },
+      {
+        forceFormData: true,
+        preserveScroll: true,
+        onStart: () => setUploading(true),
+        onFinish: () => setUploading(false),
+        onSuccess: () => notify(t('Foto profil diperbarui.')),
+        onError: (errors) => notify(Object.values(errors).join(' '), true),
+      },
+    );
+  };
+
+  const removeAvatar = () =>
+    router.delete('/profile/avatar', {
+      preserveScroll: true,
+      onSuccess: () => notify(t('Foto profil dihapus.')),
+    });
 
   return (
     <SettingsPage
       title={t('Profil')}
       description={t('Data akun Anda.')}
     >
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('Foto profil')}</CardTitle>
+          <CardDescription>
+            {t('Tampil di menu akun. Tanpa foto, inisial nama Anda yang dipakai.')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImagePicker
+            shape="round"
+            current={auth.user?.avatar}
+            onFile={uploadAvatar}
+            onRemove={auth.user?.avatar ? removeAvatar : undefined}
+            busy={uploading}
+            fallback={<UserAvatar user={auth.user} className="size-full" />}
+          />
+        </CardContent>
+      </Card>
       <FormCard
         title={t('Informasi akun')}
         description={t('Nama dan email dipakai di notifikasi dan jejak aktivitas.')}
@@ -34,12 +85,6 @@ export default function Profile() {
           )
         }
       >
-        <div className="flex items-center gap-3">
-          <UserAvatar user={auth.user} className="size-14" />
-          <p className="text-sm text-muted-foreground">
-            {t('Tanpa foto, inisial nama Anda yang dipakai.')}
-          </p>
-        </div>
         <FormGrid>
           <Field data-invalid={!!form.errors.name}>
             <FieldLabel htmlFor="p-name">{t('Nama')}</FieldLabel>
@@ -64,6 +109,7 @@ export default function Profile() {
           </Field>
         </FormGrid>
       </FormCard>
+      </div>
     </SettingsPage>
   );
 }

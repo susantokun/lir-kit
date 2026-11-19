@@ -33,6 +33,7 @@ class Access
             [self::usersAbility(), __('Kelola pengguna')],
             [self::rolesAbility(), __('Kelola peran')],
             [config('lir-kit.menu_ability'), __('Kelola menu')],
+            [config('lir-kit.audit_ability'), __('Melihat log audit')],
         ] as [$key, $label]) {
             if (is_string($key) && $key !== '') {
                 $kit[$key] ??= $label;
@@ -75,6 +76,11 @@ class Access
     public static function rolesAbility(): string
     {
         return config('lir-kit.roles_ability') ?? config('lir-kit.ability');
+    }
+
+    public static function auditAbility(): string
+    {
+        return config('lir-kit.audit_ability') ?? config('lir-kit.ability');
     }
 
     /**

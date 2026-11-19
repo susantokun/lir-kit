@@ -7,11 +7,13 @@ import SettingsPage from '@/layouts/settings-page';
 export default function Mail() {
   return (
     <SettingsPage
-      title={t('Email & template')}
+      title={t('Email')}
       description={t('Server pengirim, alamat pengirim, dan isi email kode masuk.')}
     >
-      <MailSettingsCard />
-      <LoginCodeEmailCard />
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <MailSettingsCard />
+        <LoginCodeEmailCard />
+      </div>
     </SettingsPage>
   );
 }

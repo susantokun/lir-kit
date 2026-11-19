@@ -24,7 +24,7 @@ Di kode kit, teks sumber ditulis Bahasa Indonesia (`__()` dan `t()`); terjemahan
 ## Syarat
 
 PHP 8.3+, Laravel 12/13, Inertia (React), Tailwind v4 + komponen shadcn/ui (gaya base-nova, Base UI) di `@/components/ui`:
-`alert`, `avatar`, `badge`, `breadcrumb`, `button`, `card`, `collapsible`, `dialog`, `dropdown-menu`, `field`, `input`, `input-group`, `kbd`, `native-select`, `table`, `checkbox`,
+`alert`, `avatar`, `badge`, `breadcrumb`, `button`, `card`, `collapsible`, `dialog`, `dropdown-menu`, `field`, `input`, `input-group`, `kbd`, `table`, `checkbox`,
 `popover`, `radio-group`, `scroll-area`, `separator`, `sheet`, `sidebar`, `skeleton`, `spinner`, `switch`, `textarea`, `tooltip`.
 Tambah yang belum ada dengan `npx shadcn@latest add <nama>` (`sidebar` ikut membawa `@/hooks/use-mobile`). Ikon memakai `lucide-react`.
 
@@ -182,6 +182,43 @@ Menyimpan mode OTP ditolak di server produksi bila email belum bisa terkirim (ma
 
 Menyembunyikan menu hanya soal tampilan; rute dan izin tetap menjadi pagar yang sebenarnya.
 Tautan buatan sendiri hanya menerima `https://`, `http://`, atau alamat internal berawalan `/` (tidak `javascript:`, tidak `//host`).
+
+## 6b. Pakai Log Audit
+
+Setiap aksi yang dicatat kit (pengguna, peran, menu, metode masuk, email, situs) masuk ke tabel `lir_audit_logs` lewat `LoginHooks::audit()` bawaan
+(`php artisan migrate`). Tiap entri menyimpan hash entri sebelumnya, jadi entri yang diubah, dihapus, atau rantai yang ditulis ulang ketahuan saat **Verifikasi integritas**;
+setiap verifikasi bersih menyimpan *titik acuan* (salin ke luar database sebagai bukti tambahan). Halamannya: `<AuditPanel />` dari `@/lir-kit/access/audit-panel`
+(starter: `pages/access/audit.tsx`), dijaga `audit_ability` (null = `ability`).
+
+- Jadwalkan pemeriksaan harian: `Schedule::command('lir-kit:audit-verify')->dailyAt('03:00');` (gagal bila rantai rusak; kejadian juga masuk `Log::critical`).
+- Aksi dari aplikasi Anda sendiri: panggil `app(\Lir\Kit\Services\AuditTrail::class)->log('nama_aksi', $user, $before, $after, 'objek', $id)`. Nilai berkunci `password`/`token`/`secret` disamarkan otomatis.
+- Bila Anda mengikat `LoginHooks` sendiri, `audit()` milik Anda tetap yang dipakai; teruskan ke `AuditTrail` bila ingin tabel ini.
+
+## 6c. Pakai Pengaturan Situs
+
+Nama, deskripsi, email kontak, logo, dan favicon: `<SiteSettingsCard />` dari `@/lir-kit/site-settings-card` (starter: `pages/settings/site.tsx`). Bagikan hasilnya ke semua halaman:
+```php
+'site' => fn () => \Lir\Kit\LirKit::site(),   // name (nama aplikasi bila belum diisi), tagline, contact_email, logo, favicon (URL atau null)
+```
+Starter memakainya di sidebar dan favicon (`layouts/app-layout.tsx`). Berkas disimpan di disk `lir-kit.disk` (null = disk bawaan) dan disajikan lewat rute kit, jadi disk privat pun aman.
+Foto profil adalah urusan aplikasi: halaman Profil starter memakai `ImagePicker` dan memanggil `POST|DELETE /profile/avatar` (simpan berkasnya, bagikan URL-nya sebagai `auth.user.avatar`).
+
+## 6d. Pakai License
+
+Halaman License (`<LicensePanel />` dari `@/lir-kit/license-panel`; starter: `pages/settings/license.tsx`) mengaktifkan aplikasi dengan *license key* ke portal license,
+atau dengan berkas `.lic` offline. Berkas diperiksa tanda tangan Ed25519-nya dengan kunci publik produk Anda, terikat ke domain, dan disimpan di `storage/app/private/lir-license`.
+Semuanya **mati secara bawaan**; nyalakan lewat `.env`:
+
+```
+LIR_LICENSE_SERVER_URL=https://license.perusahaan.id   # portal: POST /api/licenses/activate dan /validate
+LIR_LICENSE_PUBLIC_KEY=...                              # kunci publik Ed25519 (base64), bukan rahasia
+LIR_LICENSE_ENFORCE=true                                # tanpa ini license hanya ditampilkan, tidak membatasi apa pun
+```
+
+Dengan `enforce`: tanpa license yang berlaku (belum aktif, habis lewat masa tenggang, dicabut) aplikasi baca-saja untuk rute yang memakai middleware `lir.license-writable`
+(tambahkan ke grup rute Anda; rute License kit dan `lir.otp.*` selalu terbuka, tambah lainnya di `license.exempt_routes`), batas user aktif dari license berlaku di layar Pengguna,
+dan `app(LicenseState::class)->allows('MODUL.fitur')` memeriksa modul. Bagikan `'license' => fn () => \Lir\Kit\LirKit::license()` agar starter menampilkan strip peringatan.
+Jadwalkan `Schedule::command('lir-kit:license-check --jitter=300')->daily();`. Butuh ekstensi PHP `sodium`.
 
 ## 7. Sesuaikan tampilan ke aplikasi Anda: `adapters.ts`
 

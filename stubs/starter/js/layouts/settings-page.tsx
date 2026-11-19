@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react';
-import { SettingsLayout } from '@/lir-kit/layouts/settings-layout';
-import AppLayout, { useNavGroups } from '@/layouts/app-layout';
+import { PageActionsSlot } from '@/lir-kit/layouts/page-actions';
+import { PageHeader } from '@/lir-kit/layouts/page-header';
+import AppLayout from '@/layouts/app-layout';
 
-/** A settings page: the app frame, then the settings frame (side menu of the folder this page belongs to). */
+/**
+ * A page of the menu's folders (Akses, Pengaturan, Akun): the app frame, a page header (title, one line of help,
+ * and the page's main buttons on the right: see PageActions) and the whole width for the content.
+ */
 export default function SettingsPage({
   title,
   description,
@@ -12,13 +16,14 @@ export default function SettingsPage({
   description?: string;
   children: ReactNode;
 }) {
-  const groups = useNavGroups();
-
   return (
     <AppLayout title={title}>
-      <SettingsLayout groups={groups} title={title} description={description}>
-        {children}
-      </SettingsLayout>
+      <PageHeader
+        title={title}
+        description={description}
+        actions={<PageActionsSlot />}
+      />
+      {children}
     </AppLayout>
   );
 }

@@ -6,10 +6,12 @@ import SettingsPage from '@/layouts/settings-page';
 export default function LoginMethod() {
   return (
     <SettingsPage
-      title={t('Metode masuk')}
+      title={t('Metode Masuk')}
       description={t('Pilih cara pengguna masuk dan atur aturan kode sekali pakai.')}
     >
-      <LoginMethodCard />
+      <div className="lg:w-2/3 2xl:w-1/2">
+        <LoginMethodCard />
+      </div>
     </SettingsPage>
   );
 }

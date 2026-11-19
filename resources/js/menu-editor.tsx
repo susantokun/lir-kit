@@ -3,7 +3,7 @@ import {
   ArrowUpIcon,
   EyeIcon,
   EyeOffIcon,
-  FolderPlusIcon,
+  GripVerticalIcon,
   PencilIcon,
   PlusIcon,
   RotateCcwIcon,
@@ -160,11 +160,43 @@ function IconPicker({
   );
 }
 
+/** Drag and drop state shared by the rows: what is being dragged and what it hovers (siblings only). */
+type Dnd = {
+  dragging: Path | null;
+  over: Path | null;
+  start: (path: Path) => void;
+  enter: (path: Path) => void;
+  drop: (path: Path) => void;
+  end: () => void;
+};
+
+const sameList = (a: Path, b: Path) =>
+  a.length === b.length && a.slice(0, -1).every((v, i) => v === b[i]);
+const samePath = (a: Path | null, b: Path) =>
+  a !== null && a.length === b.length && a.every((v, i) => v === b[i]);
+
+/** The grip that starts a drag; the row only becomes draggable while it is pressed, so its inputs keep text selection. */
+function Grip({ onPress }: { onPress: (on: boolean) => void }) {
+  return (
+    <span
+      role="img"
+      aria-label={t('Seret untuk mengubah urutan')}
+      title={t('Seret untuk mengubah urutan')}
+      className="flex size-6 shrink-0 cursor-grab items-center justify-center text-muted-foreground hover:text-foreground active:cursor-grabbing"
+      onMouseDown={() => onPress(true)}
+      onMouseUp={() => onPress(false)}
+    >
+      <GripVerticalIcon className="size-4" />
+    </span>
+  );
+}
+
 function Row({
   node,
   path,
   index,
   count,
+  dnd,
   onTitle,
   onIcon,
   onToggle,
@@ -177,6 +209,7 @@ function Row({
   path: Path;
   index: number;
   count: number;
+  dnd: Dnd;
   onTitle: (path: Path, title: string) => void;
   onIcon: (path: Path, icon: string | null) => void;
   onToggle: (path: Path) => void;
@@ -187,16 +220,46 @@ function Row({
 }) {
   const isFolder = node.children !== undefined;
   const depth = path.length;
+  const [armed, setArmed] = useState(false);
+  const canDrop = dnd.dragging !== null && sameList(dnd.dragging, path) && !samePath(dnd.dragging, path);
 
   return (
     <div className="flex flex-col gap-2">
       <div
+        draggable={armed}
+        onDragStart={(e) => {
+          e.stopPropagation();
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', node.key);
+          dnd.start(path);
+        }}
+        onDragEnd={() => {
+          setArmed(false);
+          dnd.end();
+        }}
+        onDragOver={(e) => {
+          if (canDrop) {
+            e.preventDefault();
+            e.stopPropagation();
+            dnd.enter(path);
+          }
+        }}
+        onDrop={(e) => {
+          if (canDrop) {
+            e.preventDefault();
+            e.stopPropagation();
+            dnd.drop(path);
+          }
+        }}
         className={cn(
           'flex flex-wrap items-center gap-2 rounded-lg border bg-card p-2',
           node.hidden && 'opacity-60',
+          samePath(dnd.dragging, path) && 'opacity-40',
+          canDrop && samePath(dnd.over, path) && 'ring-2 ring-primary',
         )}
         style={{ marginLeft: (depth - 2) * 20 }}
       >
+        <Grip onPress={setArmed} />
         <IconPicker
           value={node.iconName}
           fallback={node.icon}
@@ -246,6 +309,7 @@ function Row({
               variant="ghost"
               size="icon"
               aria-label={t('Tambah menu di dalam folder')}
+              title={t('Tambah menu di dalam folder')}
               onClick={() => onAdd(path)}
             >
               <PlusIcon />
@@ -295,6 +359,7 @@ function Row({
           path={[...path, i]}
           index={i}
           count={node.children!.length}
+          dnd={dnd}
           onTitle={onTitle}
           onIcon={onIcon}
           onToggle={onToggle}
@@ -325,6 +390,11 @@ export function MenuEditor({
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [dragging, setDragging] = useState<Path | null>(null);
+  const [over, setOver] = useState<Path | null>(null);
+  const [draggingGroup, setDraggingGroup] = useState<number | null>(null);
+  const [armedGroup, setArmedGroup] = useState<number | null>(null);
+  const [overGroup, setOverGroup] = useState<number | null>(null);
 
   useEffect(() => {
     api<{ items: MenuOverride[] }>('/menu')
@@ -383,6 +453,51 @@ export function MenuEditor({
         return list;
       }),
     );
+  /** Drops the dragged entry where the target is, among the same siblings. */
+  const dropOn = (target: Path) => {
+    if (dragging && sameList(dragging, target)) {
+      const from = dragging[dragging.length - 1];
+      const to = target[target.length - 1];
+
+      change(
+        editList(tree, dragging.slice(0, -1), (list) => {
+          const [moved] = list.splice(from, 1);
+          list.splice(to, 0, moved);
+
+          return list;
+        }),
+      );
+    }
+
+    setDragging(null);
+    setOver(null);
+  };
+
+  const dnd: Dnd = {
+    dragging,
+    over,
+    start: setDragging,
+    enter: setOver,
+    drop: dropOn,
+    end: () => {
+      setDragging(null);
+      setOver(null);
+    },
+  };
+
+  const dropGroup = (target: number) => {
+    if (draggingGroup !== null && draggingGroup !== target) {
+      const next = [...tree];
+      const [moved] = next.splice(draggingGroup, 1);
+      next.splice(target, 0, moved);
+      change(next);
+    }
+
+    setDraggingGroup(null);
+    setOverGroup(null);
+    setArmedGroup(null);
+  };
+
   const onRemove = (path: Path) =>
     change(
       editList(tree, path.slice(0, -1), (list) =>
@@ -526,9 +641,35 @@ export function MenuEditor({
           <Skeleton className="h-96 w-full" />
         ) : (
           tree.map((group, g) => (
-            <Card key={group.key}>
+            <Card
+              key={group.key}
+              draggable={armedGroup === g}
+              onDragStart={() => setDraggingGroup(g)}
+              onDragEnd={() => {
+                setDraggingGroup(null);
+                setOverGroup(null);
+                setArmedGroup(null);
+              }}
+              onDragOver={(e) => {
+                if (draggingGroup !== null && draggingGroup !== g) {
+                  e.preventDefault();
+                  setOverGroup(g);
+                }
+              }}
+              onDrop={(e) => {
+                if (draggingGroup !== null) {
+                  e.preventDefault();
+                  dropGroup(g);
+                }
+              }}
+              className={cn(
+                draggingGroup === g && 'opacity-40',
+                draggingGroup !== null && overGroup === g && draggingGroup !== g && 'ring-2 ring-primary',
+              )}
+            >
               <CardHeader>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Grip onPress={(on) => setArmedGroup(on ? g : null)} />
                   <Input
                     aria-label={t('Judul bagian')}
                     className="h-9 max-w-xs font-medium"
@@ -581,15 +722,6 @@ export function MenuEditor({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      aria-label={t('Tambah menu di bagian ini')}
-                      onClick={() => openAdd([g])}
-                    >
-                      <FolderPlusIcon />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
                       aria-label={
                         group.hidden ? t('Tampilkan') : t('Sembunyikan')
                       }
@@ -622,6 +754,7 @@ export function MenuEditor({
                     path={[g, i]}
                     index={i}
                     count={group.items.length}
+                    dnd={dnd}
                     onTitle={onTitle}
                     onIcon={onIcon}
                     onToggle={onToggle}
@@ -631,6 +764,16 @@ export function MenuEditor({
                     onRemove={onRemove}
                   />
                 ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => openAdd([g])}
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  {t('Tambah menu')}
+                </Button>
               </CardContent>
             </Card>
           ))

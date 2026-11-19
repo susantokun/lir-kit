@@ -9,7 +9,9 @@ export default function Appearance() {
       title={t('Tampilan')}
       description={t('Pilih tema aplikasi. Pilihan disimpan di peramban ini.')}
     >
-      <AppearanceCard />
+      <div className="lg:w-2/3 2xl:w-1/2">
+        <AppearanceCard />
+      </div>
     </SettingsPage>
   );
 }
