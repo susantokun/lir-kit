@@ -1,6 +1,6 @@
 {
     "name": "susantokun/lir-kit",
-    "description": "Passwordless email-code (OTP) sign-in, sender email settings with an editable template, and a per-tenant sidebar menu editor for Laravel + Inertia + React.",
+    "description": "Email-code (OTP) sign-in, sender email settings and templates, sidebar menu editor, users and roles, tamper-evident audit log, site settings and license for Laravel + Inertia + React. Pick the parts you need.",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -8,7 +8,10 @@
         "inertia",
         "otp",
         "passwordless",
-        "menu"
+        "menu",
+        "roles",
+        "audit-log",
+        "license"
     ],
     "require": {
         "php": "^8.3",
@@ -20,6 +23,10 @@
         "illuminate/validation": "^12.0|^13.0",
         "illuminate/auth": "^12.0|^13.0",
         "inertiajs/inertia-laravel": "^2.0|^3.0"
+    },
+    "suggest": {
+        "ext-sodium": "Diperlukan hanya bila memakai License (memeriksa tanda tangan Ed25519).",
+        "laravel/fortify": "Halaman auth starter memakai URL bawaan Fortify (login, lupa kata sandi, 2FA)."
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",

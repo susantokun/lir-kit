@@ -3,7 +3,7 @@
 Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis dengan bagian
 **Backend**, **Frontend** (apakah perlu `vendor:publish --tag=lir-kit-js --force`), dan **Upgrade** (langkah khusus).
 
-## [Belum dirilis] (rencana 0.3.0): starter kit, Fase 1 sampai 3
+## [0.3.0] - 2026-11-19: starter kit, pengguna dan peran, audit, situs, license, pilih bagian
 
 ### Backend
 - Baru: **pilih bagian yang dipakai.** Config baru `features` (`otp`, `mail`, `menu`, `access`, `audit`, `site`, `license`), **semua aktif secara bawaan** sehingga proyek yang sudah berjalan tidak berubah. Bagian yang dimatikan tidak mendaftarkan rute dan perintah artisan (404), `otp` butuh `mail` (ikut dinyalakan), `LoginMethod` mengabaikan mode OTP tersimpan bila `otp` mati, `MailSettings` tidak menimpa `MAIL_*` bila `mail` mati, `DefaultLoginHooks::audit()` hanya menulis `Log::info` bila `audit` mati, middleware `lir.license-writable` meneruskan semua bila `license` mati. Kelas baru `Lir\Kit\Features`, `LirKit::features()` (bagikan sebagai prop `features`), dan perintah `lir-kit:install` (interaktif atau `--only=otp,audit --starter --all --no-migrate --no-js --force`). Tabel `lir_*` tetap dibuat oleh migrasi. `LoginHooks` tidak berubah.
