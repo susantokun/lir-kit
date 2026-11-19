@@ -3,7 +3,7 @@ import { ArrowLeftIcon, MailIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { OtpCodeInput } from './otp-code-input';
 import { SessionConflictDialog } from './session-conflict-dialog';
-import type { SessionConflict } from '@/components/session-conflict-dialog';
+import type { SessionConflict } from './session-conflict-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Field,

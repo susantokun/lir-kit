@@ -3,7 +3,13 @@
     "description": "Passwordless email-code (OTP) sign-in, sender email settings with an editable template, and a per-tenant sidebar menu editor for Laravel + Inertia + React.",
     "type": "library",
     "license": "MIT",
-    "keywords": ["laravel", "inertia", "otp", "passwordless", "menu"],
+    "keywords": [
+        "laravel",
+        "inertia",
+        "otp",
+        "passwordless",
+        "menu"
+    ],
     "require": {
         "php": "^8.3",
         "illuminate/support": "^12.0|^13.0",
@@ -17,6 +23,7 @@
     },
     "require-dev": {
         "orchestra/testbench": "^10.0|^11.0",
+        "orchestra/workbench": "^11.3",
         "pestphp/pest": "^3.0|^4.0",
         "pestphp/pest-plugin-laravel": "^3.0|^4.0"
     },
@@ -27,7 +34,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Lir\\Kit\\Tests\\": "tests/"
+            "Lir\\Kit\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "extra": {
@@ -44,5 +53,20 @@
         "sort-packages": true
     },
     "minimum-stability": "stable",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "test": "@php vendor/bin/pest"
+    }
 }

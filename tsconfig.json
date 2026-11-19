@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "allowJs": true,
+        "noEmit": true,
+        "isolatedModules": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "jsx": "react-jsx",
+        "types": ["vite/client"],
+        "paths": {
+            "@lir-kit/*": ["./resources/js/*"],
+            "@/*": ["./workbench/resources/js/*"]
+        }
+    },
+    "include": ["resources/js/**/*", "workbench/resources/js/**/*"]
+}

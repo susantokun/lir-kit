@@ -1,0 +1,42 @@
+providers:
+  - Lir\Kit\LirKitServiceProvider
+  - Workbench\App\Providers\WorkbenchServiceProvider
+
+migrations:
+  - workbench/database/migrations
+
+seeders:
+  - Workbench\Database\Seeders\DatabaseSeeder
+
+workbench:
+  start: /
+  install: true
+  health: false
+  discovers:
+    web: false
+    api: false
+    commands: false
+    components: false
+    views: true
+  build:
+    - asset-publish
+    - create-sqlite-db
+    - db-wipe
+    - migrate-fresh:
+        --seed: true
+        --seeder: 'Workbench\Database\Seeders\DatabaseSeeder'
+  assets: []
+  sync:
+    - from: workbench/public/build
+      to: public/build
+
+env:
+  APP_NAME: "lir-kit playground"
+  APP_ENV: local
+  APP_DEBUG: true
+  DB_CONNECTION: sqlite
+  SESSION_DRIVER: file
+  CACHE_STORE: file
+  QUEUE_CONNECTION: sync
+  MAIL_MAILER: log
+  LIR_USER_MODEL: Workbench\App\Models\User

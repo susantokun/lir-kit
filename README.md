@@ -168,11 +168,36 @@ Aturan supaya update mulus:
 git tag v0.1.1 && git push --tags
 ```
 
-## Pengembangan paket
+## Pengembangan paket: playground
+
+Kit punya aplikasi Laravel mini sendiri (**playground**, di folder `workbench/`) untuk melihat dan mencoba perubahan tanpa membuka proyek lain.
+Isinya halaman login (kata sandi dan kode OTP, kode tampil di layar), halaman pengaturan (metode masuk, template email, email pengirim),
+dan editor menu dengan pratinjau sidebar. Komponen yang tampil adalah **source asli** di `resources/js` (alias `@lir-kit`), jadi ubahan langsung terlihat (hot reload).
+
+Pertama kali:
 
 ```bash
 composer install
-vendor/bin/pest
+pnpm install
+composer build          # buat database SQLite, migrasi, dan isi akun demo
 ```
 
-Tes memakai Orchestra Testbench (SQLite memori). Komponen React diperiksa dengan menyalinnya ke aplikasi yang memakai shadcn/ui lalu menjalankan `tsc --noEmit`.
+Tiap kali bekerja, jalankan di dua terminal:
+
+```bash
+composer serve          # backend di http://127.0.0.1:8000
+pnpm dev                # Vite (hot reload React)
+```
+
+Masuk dengan `demo@lir-kit.test` (kata sandi `password`), atau pilih mode "kode email" di Pengaturan lalu pakai kode yang tampil di halaman.
+Akun `nonaktif@lir-kit.test` dipakai untuk mencoba akun yang tidak boleh masuk. Isi `workbench/` tidak ikut terpasang ke proyek lain (`.gitattributes`).
+
+Memeriksa dan menguji:
+
+```bash
+vendor/bin/pest         # tes backend (Orchestra Testbench)
+pnpm types:check        # tsc untuk komponen React dan playground
+```
+
+Alur merilis: ubah dan coba di playground, perbarui `CHANGELOG.md`, commit, `git tag vX.Y.Z`, `git push --tags`.
+Packagist memperbaruinya sendiri; proyek yang memakai kit tinggal `composer update susantokun/lir-kit`.

@@ -3,6 +3,20 @@
 Mengikuti [Semantic Versioning](https://semver.org/lang/id/). Tulis tiap rilis dengan bagian
 **Backend**, **Frontend** (apakah perlu `vendor:publish --tag=lir-kit-js --force`), dan **Upgrade** (langkah khusus).
 
+## [0.2.2] - 2026-11-19
+
+### Backend
+- Tidak ada perubahan.
+
+### Frontend
+- `otp-login-form.tsx`: perbaiki impor tipe `SessionConflict` yang masih menunjuk ke `@/components/session-conflict-dialog` (milik aplikasi) menjadi `./session-conflict-dialog`. Tanpa ini proyek yang tidak punya file itu gagal build. Ditemukan lewat playground baru. Perlu `vendor:publish --tag=lir-kit-js --force` (lalu pulihkan `adapters.ts`), atau ubah satu baris impor itu secara manual.
+
+### Tooling
+- Playground (`workbench/`) untuk mengembangkan kit; tidak ikut terpasang ke proyek lain.
+
+### Upgrade
+- `composer update susantokun/lir-kit`.
+
 ## [0.2.1] - 2026-11-19
 
 ### Backend
