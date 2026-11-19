@@ -16,6 +16,15 @@
             "vite/client"
         ],
         "paths": {
+            "@/lir-kit/*": [
+                "./resources/js/*"
+            ],
+            "@/config/*": [
+                "./stubs/starter/js/config/*"
+            ],
+            "@/layouts/*": [
+                "./stubs/starter/js/layouts/*"
+            ],
             "@/*": [
                 "./workbench/resources/js/*"
             ],
@@ -26,6 +35,7 @@
     },
     "include": [
         "resources/js/**/*",
+        "stubs/starter/js/**/*",
         "workbench/resources/js/**/*"
     ]
 }

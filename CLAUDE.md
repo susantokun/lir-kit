@@ -25,6 +25,13 @@ Baca `README.md` (pasang, pakai, update) sebelum mengubah apa pun.
 6. **Keamanan OTP tidak boleh melemah:** kode ter-hash, sekali pakai, kedaluwarsa, dibatasi percobaan, jawaban sama untuk email tak terdaftar, kode hanya tampil saat `APP_ENV=local`.
    Pengaturan tertutup bila ability `lir-kit.manage` belum didefinisikan; alamat menu hanya `http(s)://` atau `/path` (bukan `javascript:` atau `//host`).
 
+## Dua lapis: paket dan starter
+
+- **Lapis paket** (`resources/js`, `--tag=lir-kit-js`): komponen, layout (`layouts/`), dan shell (`shell/`) yang diperbarui lewat update. Generik: merek, menu, pengguna, dan fitur khusus aplikasi masuk lewat **props/slot**, bukan ekspor baru di `adapters.ts` (adapters proyek lama tidak boleh rusak).
+- **Lapis starter** (`stubs/starter`, `--tag=lir-kit-starter`): halaman, `layouts/app-layout.tsx`, `config/brand.ts`, `config/nav.ts`, CSS. Diterbitkan sekali dan jadi milik proyek. Berkas starter mengimpor `@/lir-kit/...`, `@/config/...`, `@/layouts/...` (path sebagaimana di proyek). Halaman auth memakai URL bawaan Fortify.
+- Playground menjalankan `stubs/starter` apa adanya lewat alias Vite/tsconfig; jangan menyalin berkas starter ke `workbench/`. Rute playground (`workbench/routes/web.php`) meniru URL Fortify.
+- Fase berikutnya: Fase 2 halaman pengaturan (profil, keamanan, tampilan), Fase 3 manajemen pengguna dan peran (rancang backend generik dan usulkan ke user dulu).
+
 ## Aturan React (`resources/js`)
 
 - Komponen kit disalin ke tiap proyek (`vendor:publish --tag=lir-kit-js`). Satu-satunya file yang boleh disesuaikan proyek adalah `adapters.ts`.

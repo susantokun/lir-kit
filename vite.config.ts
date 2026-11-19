@@ -21,10 +21,15 @@ export default defineConfig({
         tailwindcss(),
     ],
     resolve: {
-        alias: {
-            '@lir-kit': path.resolve(__dirname, 'resources/js'),
-            '@': path.resolve(__dirname, 'workbench/resources/js'),
-        },
+        // Order matters: the specific aliases come before '@'. The starter's own files (stubs/starter) are what a real
+        // project gets from `vendor:publish --tag=lir-kit-starter`, so the playground runs them as they are.
+        alias: [
+            { find: '@lir-kit', replacement: path.resolve(__dirname, 'resources/js') },
+            { find: '@/lir-kit', replacement: path.resolve(__dirname, 'resources/js') },
+            { find: '@/config', replacement: path.resolve(__dirname, 'stubs/starter/js/config') },
+            { find: '@/layouts', replacement: path.resolve(__dirname, 'stubs/starter/js/layouts') },
+            { find: '@', replacement: path.resolve(__dirname, 'workbench/resources/js') },
+        ],
     },
     server: {
         watch: { ignored: ['**/vendor/**', '**/tests/**'] },

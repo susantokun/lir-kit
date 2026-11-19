@@ -18,12 +18,15 @@ Di kode kit, teks sumber ditulis Bahasa Indonesia (`__()` dan `t()`); terjemahan
 | Backend (rute, controller, model, migrasi, notifikasi, layanan) | `src/`, `routes/`, `database/` | otomatis (service provider + `composer update`) |
 | Konfigurasi | `config/lir-kit.php` | `vendor:publish --tag=lir-kit-config` |
 | Layout email | `resources/views/mail` | otomatis; salin bila ingin mengubah: `--tag=lir-kit-views` |
-| Komponen React | `resources/js` | disalin ke `resources/js/lir-kit` dengan `--tag=lir-kit-js` |
+| Komponen dan layout React (shell, layout auth, kartu pengaturan) | `resources/js` | disalin ke `resources/js/lir-kit` dengan `--tag=lir-kit-js` (boleh ditimpa saat update) |
+| **Starter** (halaman auth, layout aplikasi, menu, merek) | `stubs/starter` | diterbitkan **sekali** dengan `--tag=lir-kit-starter`; setelah itu milik proyek Anda |
 
 ## Syarat
 
-PHP 8.3+, Laravel 12/13, Inertia (React), Tailwind + komponen shadcn/ui (`button`, `input`, `card`, `field`, `dialog`,
-`popover`, `switch`, `radio-group`, `native-select`, `skeleton`, `spinner`, `alert`, `textarea`, `badge`) di `@/components/ui`.
+PHP 8.3+, Laravel 12/13, Inertia (React), Tailwind v4 + komponen shadcn/ui (gaya base-nova, Base UI) di `@/components/ui`:
+`alert`, `avatar`, `badge`, `breadcrumb`, `button`, `card`, `collapsible`, `dialog`, `dropdown-menu`, `field`, `input`, `input-group`, `kbd`, `native-select`,
+`popover`, `radio-group`, `scroll-area`, `separator`, `sheet`, `sidebar`, `skeleton`, `spinner`, `switch`, `textarea`, `tooltip`.
+Tambah yang belum ada dengan `npx shadcn@latest add <nama>` (`sidebar` ikut membawa `@/hooks/use-mobile`). Ikon memakai `lucide-react`.
 
 ## 1. Pasang
 
@@ -37,6 +40,30 @@ php artisan vendor:publish --tag=lir-kit-js
 ```
 
 `migrate` membuat tiga tabel berawalan `lir_`: `lir_login_codes`, `lir_settings`, `lir_menu_settings`.
+
+## 1b. Pasang starter (UI siap pakai, opsional tetapi disarankan)
+
+Starter memberi proyek baru tampilan lengkap seperti aplikasi jadi: halaman masuk berpanel merek, lupa dan atur ulang kata sandi, tantangan 2FA,
+verifikasi email, serta kerangka aplikasi (sidebar tiga level yang bisa diciutkan, bilah atas dengan breadcrumb dan pencarian Ctrl K, menu akun, tema terang/gelap, tampilan ponsel).
+
+```bash
+php artisan vendor:publish --tag=lir-kit-js        # komponen dan layout inti: resources/js/lir-kit (diperbarui lewat update)
+php artisan vendor:publish --tag=lir-kit-starter   # halaman, layout aplikasi, config merek dan menu: milik Anda
+```
+
+Tag `lir-kit-starter` menaruh berkas ini (tidak menimpa berkas yang sudah ada kecuali dengan `--force`):
+
+| Berkas | Isi |
+|---|---|
+| `resources/js/pages/auth/{login,forgot-password,reset-password,two-factor-challenge,verify-email}.tsx` | halaman auth (memanggil URL bawaan Fortify: `/login`, `/forgot-password`, `/reset-password`, `/two-factor-challenge`, `/email/verification-notification`) |
+| `resources/js/layouts/app-layout.tsx` | bingkai halaman: dipakai tiap halaman sebagai `<AppLayout title="...">` |
+| `resources/js/config/brand.ts` | nama aplikasi dan teks panel kiri halaman masuk |
+| `resources/js/config/nav.ts` | menu aplikasi (tiga level); satu baris per halaman |
+| `resources/css/lir-kit-starter.css` | animasi panel masuk; `@import` dari `app.css` Anda |
+
+Halaman Inertia dipetakan dari `resources/js/pages`, jadi di Laravel Fortify cukup `Fortify::loginView(fn () => Inertia::render('auth/login', LirKit::loginProps(request())))` dan seterusnya.
+Pembagian tugasnya: **layout dan komponen inti ada di paket** (`@/lir-kit/layouts/app-shell`, `auth-split-layout`, `shell/*`) dan ikut diperbarui; **halaman dan konfigurasi ada di proyek Anda** dan boleh diubah bebas.
+Kerangka menerima merek, menu, pengguna, dan slot (`sidebarHeader`, `headerActions`, `userMenuExtra`, `toaster`, `onSearch`) lewat props, jadi fitur khusus aplikasi (pilih perusahaan, notifikasi) dipasang di `app-layout.tsx` tanpa mengubah kit.
 
 ## 2. Beri izin (wajib)
 
@@ -171,8 +198,10 @@ git tag v0.1.1 && git push --tags
 ## Pengembangan paket: playground
 
 Kit punya aplikasi Laravel mini sendiri (**playground**, di folder `workbench/`) untuk melihat dan mencoba perubahan tanpa membuka proyek lain.
-Isinya halaman login (kata sandi dan kode OTP, kode tampil di layar), halaman pengaturan (metode masuk, template email, email pengirim),
-dan editor menu dengan pratinjau sidebar. Komponen yang tampil adalah **source asli** di `resources/js` (alias `@lir-kit`), jadi ubahan langsung terlihat (hot reload).
+Isinya **starter apa adanya**: halaman masuk (kata sandi dan kode OTP, kode tampil di layar), lupa dan atur ulang kata sandi (tautan tampil di halaman saat lokal),
+tantangan 2FA (kode demo `123456`), verifikasi email, kerangka aplikasi dengan sidebar, pencarian, dan tema, lalu halaman pengaturan dan editor menu.
+Yang tampil adalah **source asli**: komponen di `resources/js` dan halaman starter di `stubs/starter` (alias `@/lir-kit`, `@/config`, `@/layouts`), jadi ubahan langsung terlihat (hot reload)
+dan hasilnya persis seperti yang diterima proyek lewat `vendor:publish`. Rute playground meniru URL Fortify (`workbench/routes/web.php`) karena playground tidak memakai Fortify.
 
 Pertama kali:
 

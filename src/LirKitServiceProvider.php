@@ -35,6 +35,12 @@ class LirKitServiceProvider extends ServiceProvider
             $this->publishes([__DIR__.'/../config/lir-kit.php' => config_path('lir-kit.php')], 'lir-kit-config');
             $this->publishes([__DIR__.'/../resources/views' => resource_path('views/vendor/lir-kit')], 'lir-kit-views');
             $this->publishes([__DIR__.'/../resources/js' => resource_path('js/lir-kit')], 'lir-kit-js');
+
+            // The starter: pages and layout that become the project's own (never overwritten without --force).
+            $this->publishes([
+                __DIR__.'/../stubs/starter/js' => resource_path('js'),
+                __DIR__.'/../stubs/starter/css/lir-kit-starter.css' => resource_path('css/lir-kit-starter.css'),
+            ], 'lir-kit-starter');
         }
     }
 }
