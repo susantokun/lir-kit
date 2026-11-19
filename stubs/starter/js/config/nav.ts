@@ -1,5 +1,6 @@
 import {
   FileTextIcon,
+  KeyRoundIcon,
   LayoutDashboardIcon,
   MailIcon,
   MenuIcon,
@@ -16,14 +17,31 @@ import { t } from '@/lir-kit/adapters';
 /** Entries that cannot be hidden in the menu editor (same list as config/lir-kit.php 'menu_locked'). */
 setLockedKeys(['/dashboard', '/settings/menu', 'folder.pengaturan']);
 
+/** The permission a page needs to show in the menu (the same names as your Gate abilities). Pages not listed are open to everyone signed in. */
+const REQUIRES: Record<string, string> = {
+  '/laporan': 'laporan.lihat',
+  '/akses/pengguna': 'lir-kit.users',
+  '/akses/peran': 'lir-kit.roles',
+  '/settings/login-method': 'lir-kit.manage',
+  '/settings/mail': 'lir-kit.manage',
+  '/settings/menu': 'lir-kit.manage',
+};
+
 /**
  * Your app's built-in menu: up to three levels (group > entry > sub entry). Give each group and folder a stable `key`;
  * for a page the key is its `href`. Add a page by adding a line, and the sidebar, the search palette and the
- * breadcrumb all follow. Hide entries by permission here before returning (the editor only reorders what you give it).
- * The pages under a folder (Pengaturan, Akun) also make up that folder's side menu on the settings pages.
+ * breadcrumb all follow. The pages under a folder (Akses, Pengaturan, Akun) also make up that folder's side menu
+ * on the settings pages.
+ *
+ * `permissions` is what the person may do (the shared prop from LirKit::permissions()). Leave it out to get the whole
+ * menu, which is what the menu editor needs. A page whose permission in REQUIRES the person lacks is left out, and so
+ * is a folder left empty. Hiding is cosmetic: the routes stay protected by their abilities.
  */
-export function buildNav(): KitNavGroup[] {
-  return [
+export function buildNav(permissions?: string[]): KitNavGroup[] {
+  const allowed = (href: string) =>
+    permissions === undefined || REQUIRES[href] === undefined || permissions.includes(REQUIRES[href]);
+
+  const groups: KitNavGroup[] = [
     {
       key: 'group.utama',
       label: t('Utama'),
@@ -40,10 +58,10 @@ export function buildNav(): KitNavGroup[] {
           key: 'folder.akses',
           href: '/akses/pengguna',
           label: t('Akses'),
-          icon: UsersIcon,
+          icon: KeyRoundIcon,
           children: [
             { href: '/akses/pengguna', label: t('Pengguna'), icon: UsersIcon },
-            { href: '/akses/peran', label: t('Peran'), icon: UsersIcon },
+            { href: '/akses/peran', label: t('Peran'), icon: ShieldCheckIcon },
           ],
         },
         {
@@ -77,4 +95,16 @@ export function buildNav(): KitNavGroup[] {
       ],
     },
   ];
+
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .map((item) => ({
+          ...item,
+          children: item.children?.filter((child) => allowed(child.href)),
+        }))
+        .filter((item) => (item.children ? item.children.length > 0 : allowed(item.href))),
+    }))
+    .filter((group) => group.items.length > 0);
 }

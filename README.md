@@ -24,7 +24,7 @@ Di kode kit, teks sumber ditulis Bahasa Indonesia (`__()` dan `t()`); terjemahan
 ## Syarat
 
 PHP 8.3+, Laravel 12/13, Inertia (React), Tailwind v4 + komponen shadcn/ui (gaya base-nova, Base UI) di `@/components/ui`:
-`alert`, `avatar`, `badge`, `breadcrumb`, `button`, `card`, `collapsible`, `dialog`, `dropdown-menu`, `field`, `input`, `input-group`, `kbd`, `native-select`,
+`alert`, `avatar`, `badge`, `breadcrumb`, `button`, `card`, `collapsible`, `dialog`, `dropdown-menu`, `field`, `input`, `input-group`, `kbd`, `native-select`, `table`, `checkbox`,
 `popover`, `radio-group`, `scroll-area`, `separator`, `sheet`, `sidebar`, `skeleton`, `spinner`, `switch`, `textarea`, `tooltip`.
 Tambah yang belum ada dengan `npx shadcn@latest add <nama>` (`sidebar` ikut membawa `@/hooks/use-mobile`). Ikon memakai `lucide-react`.
 
@@ -39,7 +39,7 @@ php artisan vendor:publish --tag=lir-kit-config
 php artisan vendor:publish --tag=lir-kit-js
 ```
 
-`migrate` membuat tiga tabel berawalan `lir_`: `lir_login_codes`, `lir_settings`, `lir_menu_settings`.
+`migrate` membuat tabel berawalan `lir_`: `lir_login_codes`, `lir_settings`, `lir_menu_settings`, ditambah `lir_roles`, `lir_role_permissions`, `lir_role_user` (peran).
 
 ## 1b. Pasang starter (UI siap pakai, opsional tetapi disarankan)
 
@@ -67,6 +67,23 @@ Halaman profil, keamanan, dan 2FA memanggil endpoint akun Fortify (`PUT /user/pr
 Halaman Inertia dipetakan dari `resources/js/pages`, jadi di Laravel Fortify cukup `Fortify::loginView(fn () => Inertia::render('auth/login', LirKit::loginProps(request())))` dan seterusnya.
 Pembagian tugasnya: **layout dan komponen inti ada di paket** (`@/lir-kit/layouts/app-shell`, `auth-split-layout`, `shell/*`) dan ikut diperbarui; **halaman dan konfigurasi ada di proyek Anda** dan boleh diubah bebas.
 Kerangka menerima merek, menu, pengguna, dan slot (`sidebarHeader`, `headerActions`, `userMenuExtra`, `toaster`, `onSearch`) lewat props, jadi fitur khusus aplikasi (pilih perusahaan, notifikasi) dipasang di `app-layout.tsx` tanpa mengubah kit.
+
+## 1c. Pengguna, peran, dan hak akses (opsional)
+
+Kit membawa layar **Pengguna** (cari, undang, ubah, nonaktifkan, hapus) dan **Peran** (kumpulan hak akses), lengkap dengan komponen `UsersPanel`/`RolesPanel` dan halaman starter `pages/access/{users,roles}.tsx`. Setelah `php artisan migrate` (membuat `lir_roles`, `lir_role_permissions`, `lir_role_user`):
+
+1. **Daftarkan hak akses aplikasi** di `config/lir-kit.php`. Kunci hak akses sama dengan nama ability Gate:
+   ```php
+   'users_ability' => 'lir-kit.users',
+   'roles_ability' => 'lir-kit.roles',
+   'permissions' => ['Laporan' => ['laporan.lihat' => 'Melihat laporan']],
+   'register_gate' => true,   // pemegang hak akses (atau Superadmin) otomatis lolos ability itu
+   ```
+   Tanpa `register_gate`, panggil `$user->hasLirPermission('laporan.lihat')` (trait `Lir\Kit\Concerns\HasLirRoles` di model User) dari Gate Anda sendiri.
+2. **Buat Superadmin pertama** dari terminal: `php artisan lir-kit:grant email@anda.co.id` (peran `superadmin` bawaan memegang semua hak akses dan tidak bisa diubah).
+3. **Bagikan hak akses ke halaman** supaya menu menyembunyikan yang tidak boleh dibuka: `'permissions' => fn () => \Lir\Kit\LirKit::permissions($request->user())` di middleware Inertia (dan `auth.user.id`). `config/nav.ts` starter memetakan halaman ke hak akses lewat `REQUIRES`.
+
+Pengguna tetap milik aplikasi: kit membacanya lewat `Lir\Kit\Contracts\UserDirectory` (bawaan: model Eloquent di `user_model` dengan kolom `name`, `email`, dan `status` bila ada). Ikat implementasi sendiri bila pengguna Anda hidup di tempat lain. Undangan mengirim email berisi tautan masuk; bila masuk dengan kode email aktif, pengguna cukup memakai kode, jika tidak email membawa tautan atur kata sandi (rute `password.reset` milik aplikasi). Peran dipisah per tenant mengikuti `tenant_resolver`; Superadmin terakhir dan akun yang sedang dipakai tidak bisa dihapus atau dinonaktifkan.
 
 ## 2. Beri izin (wajib)
 

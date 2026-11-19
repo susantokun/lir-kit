@@ -2,9 +2,11 @@
 
 namespace Lir\Kit;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Lir\Kit\Models\MenuSetting;
+use Lir\Kit\Services\Access;
 use Lir\Kit\Services\LoginMethod;
 
 /**
@@ -32,6 +34,17 @@ class LirKit
             'resendIn' => $email === null ? 0 : RateLimiter::availableIn('lir-code:wait:'.$email),
             'devCode' => $email !== null && $method->showsCodeLocally() ? $request->session()->get('lir_otp_dev_code') : null,
         ];
+    }
+
+    /**
+     * What this person may do, to share with every page (e.g. as the Inertia prop `permissions`) so the menu can hide
+     * what they cannot open. Empty for a guest; every permission for a superadmin.
+     *
+     * @return list<string>
+     */
+    public static function permissions(?Authenticatable $user): array
+    {
+        return app(Access::class)->permissionsOf($user);
     }
 
     /**

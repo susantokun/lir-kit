@@ -30,7 +30,7 @@ Baca `README.md` (pasang, pakai, update) sebelum mengubah apa pun.
 - **Lapis paket** (`resources/js`, `--tag=lir-kit-js`): komponen, layout (`layouts/`), dan shell (`shell/`) yang diperbarui lewat update. Generik: merek, menu, pengguna, dan fitur khusus aplikasi masuk lewat **props/slot**, bukan ekspor baru di `adapters.ts` (adapters proyek lama tidak boleh rusak).
 - **Lapis starter** (`stubs/starter`, `--tag=lir-kit-starter`): halaman, `layouts/app-layout.tsx`, `config/brand.ts`, `config/nav.ts`, CSS. Diterbitkan sekali dan jadi milik proyek. Berkas starter mengimpor `@/lir-kit/...`, `@/config/...`, `@/layouts/...` (path sebagaimana di proyek). Halaman auth memakai URL bawaan Fortify.
 - Playground menjalankan `stubs/starter` apa adanya lewat alias Vite/tsconfig; jangan menyalin berkas starter ke `workbench/`. Rute playground (`workbench/routes/web.php`) meniru URL Fortify.
-- Fase berikutnya: Fase 2 halaman pengaturan (profil, keamanan, tampilan), Fase 3 manajemen pengguna dan peran (rancang backend generik dan usulkan ke user dulu).
+- Pengguna dan peran: tabel `lir_roles`, `lir_role_permissions`, `lir_role_user` dan kontrak `UserDirectory` adalah API publik (aturan kompatibilitas yang sama dengan `LoginHooks`). Hak akses = nama ability Gate; Superadmin (`is_system`) memegang semuanya. Pengguna tetap milik aplikasi.
 
 ## Aturan React (`resources/js`)
 

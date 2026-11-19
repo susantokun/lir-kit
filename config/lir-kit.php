@@ -18,6 +18,25 @@ return [
     'menu_ability' => null,
 
     /*
+    | Pengguna dan peran. Ability untuk layar Pengguna dan layar Peran (null = memakai 'ability').
+    | Disarankan: 'lir-kit.users' dan 'lir-kit.roles'.
+    */
+    'users_ability' => null,
+    'roles_ability' => null,
+
+    /*
+    | Hak akses milik aplikasi Anda, ditampilkan di editor peran: ['Nama kelompok' => ['ability.kunci' => 'Label']].
+    | Kunci hak akses sama dengan nama ability Gate.
+    */
+    'permissions' => [],
+
+    /*
+    | Bila true, kit mendaftarkan Gate::before: pengguna yang perannya memegang suatu hak akses (atau Superadmin)
+    | otomatis lolos ability itu. Bila false, Anda memanggil $user->hasLirPermission() sendiri.
+    */
+    'register_gate' => env('LIR_REGISTER_GATE', false),
+
+    /*
     | Rute. `web` untuk halaman masuk (tamu), `api` untuk layar pengaturan (harus login).
     */
     'routes' => [
@@ -40,6 +59,9 @@ return [
         'codes' => 'lir_login_codes',
         'settings' => 'lir_settings',
         'menu' => 'lir_menu_settings',
+        'roles' => 'lir_roles',
+        'role_permissions' => 'lir_role_permissions',
+        'role_user' => 'lir_role_user',
     ],
 
     /*

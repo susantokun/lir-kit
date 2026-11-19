@@ -11,15 +11,20 @@ import { buildNav } from '@/config/nav';
 type Shared = {
   auth: { user: ShellUser | null };
   menuOverrides?: MenuOverride[];
+  /** From LirKit::permissions(); when the app does not share it, the whole menu shows. */
+  permissions?: string[];
 };
 
-/** The menu as the sidebar shows it: your built-in menu with the changes saved in the menu editor applied. */
+/**
+ * The menu as the sidebar shows it: your built-in menu, cut down to what this person may open, with the changes
+ * saved in the menu editor applied.
+ */
 export function useNavGroups(): KitNavGroup[] {
-  const { menuOverrides } = usePage<Shared>().props;
+  const { menuOverrides, permissions } = usePage<Shared>().props;
 
   return useMemo(
-    () => applyMenu(buildNav(), menuOverrides ?? []),
-    [menuOverrides],
+    () => applyMenu(buildNav(permissions), menuOverrides ?? []),
+    [menuOverrides, permissions],
   );
 }
 

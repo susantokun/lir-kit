@@ -17,7 +17,9 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            'auth' => ['user' => $request->user()?->only(['name', 'email'])],
+            'auth' => ['user' => $request->user()?->only(['id', 'name', 'email'])],
+            // What this person may do (their roles' permissions), so the menu can leave out what they cannot open.
+            'permissions' => fn () => LirKit::permissions($request->user()),
             'status' => fn () => $request->session()->get('status'),
             // The saved sidebar arrangement, shared with every page (see README, "Pakai editor menu").
             'twoFactor' => fn () => ['enabled' => (bool) $request->session()->get('demo_2fa') && $request->session()->get('demo_2fa_confirmed'), 'pending' => (bool) $request->session()->get('demo_2fa') && ! $request->session()->get('demo_2fa_confirmed')],

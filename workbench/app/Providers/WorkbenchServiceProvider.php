@@ -2,7 +2,6 @@
 
 namespace Workbench\App\Providers;
 
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class WorkbenchServiceProvider extends ServiceProvider
@@ -24,8 +23,12 @@ class WorkbenchServiceProvider extends ServiceProvider
             return;
         }
 
-        // In the playground the demo user may manage everything. A real app defines this ability itself.
-        Gate::define('lir-kit.manage', fn ($user) => $user !== null);
+        // Roles decide who may do what (LIR_REGISTER_GATE turns them into Gate abilities, see testbench.yaml).
+        config([
+            'lir-kit.users_ability' => 'lir-kit.users',
+            'lir-kit.roles_ability' => 'lir-kit.roles',
+            'lir-kit.permissions' => ['Laporan' => ['laporan.lihat' => 'Melihat laporan', 'laporan.ekspor' => 'Mengekspor laporan']],
+        ]);
 
         $this->loadRoutesFrom(__DIR__.'/../../routes/web.php');
     }

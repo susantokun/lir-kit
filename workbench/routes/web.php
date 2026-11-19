@@ -107,8 +107,8 @@ Route::middleware(['web', HandleInertiaRequests::class])->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('dashboard', fn () => Inertia::render('dashboard'))->name('playground.dashboard');
         Route::get('laporan', fn () => Inertia::render('coming-soon', ['title' => 'Laporan']));
-        Route::get('akses/pengguna', fn () => Inertia::render('coming-soon', ['title' => 'Pengguna']));
-        Route::get('akses/peran', fn () => Inertia::render('coming-soon', ['title' => 'Peran']));
+        Route::get('akses/pengguna', fn () => Inertia::render('access/users'));
+        Route::get('akses/peran', fn () => Inertia::render('access/roles'));
         Route::redirect('settings', '/settings/login-method');
         foreach (['login-method', 'mail', 'menu', 'profile', 'security', 'appearance'] as $page) {
             Route::get('settings/'.$page, fn () => Inertia::render('settings/'.$page))->name('playground.settings.'.$page);
